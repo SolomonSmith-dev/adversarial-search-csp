@@ -2,7 +2,7 @@
 
 ## Authors
 Solomon Smith - 008679600
-
+Alexander Masley - 008968356
 ## Overview
 This repo contains our implementation of Homework 2 for CSE 5120.  
 We built adversarial Tic-Tac-Toe with **Minimax**, **Negamax**, and **Alpha-Beta Pruning**, plus solutions for two **CSP problems**.
