@@ -2,8 +2,7 @@
 PLEASE READ THE COMMENTS BELOW AND THE HOMEWORK DESCRIPTION VERY CAREFULLY BEFORE YOU START CODING
 
  The file where you will need to create the GUI which should include (i) drawing the grid, (ii) call your Minimax/Negamax functions
- at each step of the game, (iii) allowing the controls on the GUI to be managed (e.g., setting board size, using 
-                                                                                 Minimax or Negamax, and other options)
+ at each step of the game, (iii) allowing the controls on the GUI to be managed (e.g., setting board size, using Minimax or Negamax, and other options)
  In the example below, grid creation is supported using pygame which you can use. You are free to use any other 
  library to create better looking GUI with more control. In the __init__ function, GRID_SIZE (Line number 36) is the variable that
  sets the size of the grid. Once you have the Minimax code written in multiAgents.py file, it is recommended to test
