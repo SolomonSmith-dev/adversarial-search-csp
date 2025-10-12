@@ -56,11 +56,21 @@ class RandomBoardTicTacToe:
         pygame.display.set_caption("Tic Tac Toe Random Grid")
         self.screen.fill(self.BLACK)
         # Draw the grid
-        
+        self.screen.fill(self.BLACK)
+        for row in range(self.GRID_SIZE):
+            for col in range(self.GRID_SIZE):
+                rect = pygame.rect(
+                    col * (self.WIDTH + self.MARGIN) + self.MARGIN,
+                    row * (self.HEIGHT + self.MARGIN) + self.MARGIN,
+                    self.WIDTH,
+                    self.HEIGHT
+                )
+                pygame.draw.rect(self.screen, self.WHITE, rect)
         """
         YOUR CODE HERE TO DRAW THE GRID OTHER CONTROLS AS PART OF THE GUI
         """
         
+
         pygame.display.update()
 
     def change_turn(self):
@@ -75,12 +85,25 @@ class RandomBoardTicTacToe:
         """
         YOUR CODE HERE TO DRAW THE CIRCLE FOR THE NOUGHTS PLAYER
         """
+        center_x = int(x * (self.WIDTH + self.MARGIN) + self.WIDTH + self.MARGIN/2)
+        center_y = int(y * (self.HEIGHT + self.MARGIN) + self.HEIGHT + self.MARGIN/2)
+        radius = int(min(self.WIDTH/2 - self.MARGIN) / 2 * 0.8)
+        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, (center_x, center_y), radius, 8)
         
 
     def draw_cross(self, x, y):
         """
         YOUR CODE HERE TO DRAW THE CROSS FOR THE CROSS PLAYER AT THE CELL THAT IS SELECTED VIA THE gui
         """
+        x_start = x * (self.WIDTH + self.MARGIN) + self.MARGIN
+        y_start = y * (self.HEIGHT + self.MARGIN) + self.MARGIN
+        offset = self.WIDTH * 0.2
+        pygame.draw.line(self.screen, self.CROSS_COLOR,
+                        (x_start + offset, y_start + offset),
+                        (x_start + self.WIDTH - offset, y_start + self.HEIGHT - offset), 8)
+        pygame.draw.line(self.screen, self.CROSS_COLOR, 
+                        (x_start + self.WIDTH - offset, y_start + offset), 
+                        (x_start + offset, y_start + self.HEIGHT - offset), 8)
         
 
     def is_game_over(self):
@@ -91,6 +114,7 @@ class RandomBoardTicTacToe:
         
         YOUR RETURN VALUE SHOULD BE TRUE OR FALSE TO BE USED IN OTHER PARTS OF THE GAME
         """
+        return GameStatus.is_terminal();
     
 
     def move(self, move):
