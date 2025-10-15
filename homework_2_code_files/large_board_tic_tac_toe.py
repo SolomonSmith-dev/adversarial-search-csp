@@ -1,28 +1,46 @@
 """
-PLEASE READ THE COMMENTS BELOW AND THE HOMEWORK DESCRIPTION VERY CAREFULLY BEFORE YOU START CODING
-
- The file where you will need to create the GUI which should include (i) drawing the grid, (ii) call your Minimax/Negamax functions
- at each step of the game, (iii) allowing the controls on the GUI to be managed (e.g., setting board size, using Minimax or Negamax, and other options)
- In the example below, grid creation is supported using pygame which you can use. You are free to use any other 
- library to create better looking GUI with more control. In the __init__ function, GRID_SIZE (Line number 36) is the variable that
- sets the size of the grid. Once you have the Minimax code written in multiAgents.py file, it is recommended to test
- your algorithm (with alpha-beta pruning) on a 3x3 GRID_SIZE to see if the computer always tries for a draw and does 
- not let you win the game. Here is a video tutorial for using pygame to create grids http://youtu.be/mdTeqiWyFnc
- 
- 
- PLEASE CAREFULLY SEE THE PORTIONS OF THE CODE/FUNCTIONS WHERE IT INDICATES "YOUR CODE BELOW" TO COMPLETE THE SECTIONS
- 
+Tic Tac Toe GUI with persistent board drawing and corrected cross/circle rendering.
 """
+
 import pygame
 import numpy as np
 from GameStatus_5120 import GameStatus
 from multiAgents import minimax, negamax
 import sys, random
 
-mode = "player_vs_ai" # default mode for playing the game (player vs AI)
+mode = "player_vs_ai"  # default mode for playing the game (player vs AI)
+
+screen_width = 600
+screen_height = 600
+HEADER_SIZE = 200
+
+pygame.init()
+
+class Button:
+    def __init__(self, rect, text, color, hover_color, text_color, action=None, font_size=28):
+        self.rect = pygame.Rect(rect)
+        self.text = text
+        self.color = color
+        self.hover_color = hover_color
+        self.text_color = text_color
+        self.action = action  # function to call when clicked
+        self.font = pygame.font.SysFont(None, font_size)
+
+    def draw(self, screen):
+        mouse_pos = pygame.mouse.get_pos()
+        is_hovered = self.rect.collidepoint(mouse_pos)
+        pygame.draw.rect(screen, self.hover_color if is_hovered else self.color, self.rect, border_radius=8)
+        text_surf = self.font.render(self.text, True, self.text_color)
+        text_rect = text_surf.get_rect(center=self.rect.center)
+        screen.blit(text_surf, text_rect)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+            if self.action:
+                self.action()
 
 class RandomBoardTicTacToe:
-    def __init__(self, size = (600, 600)):
+    def __init__(self, size=(screen_width, screen_height + HEADER_SIZE)):
 
         self.size = self.width, self.height = size
         # Define some colors
@@ -32,164 +50,219 @@ class RandomBoardTicTacToe:
         self.RED = (255, 0, 0)
 
         # Grid Size
-        self.GRID_SIZE = 4
-        self. OFFSET = 5
-
+        self.GRID_SIZE = 3
+        self.OFFSET = 5
+        self.HEADER_SIZE = 200
+        self.MARGIN = 5
         self.CIRCLE_COLOR = (140, 146, 172)
         self.CROSS_COLOR = (140, 146, 172)
 
+        self.player_symbol = "X"  # Current symbol for human player
+
+        # Define button colors
+        gray = (180, 180, 180)
+        light_gray = (220, 220, 220)
+        black = (0, 0, 0)
+
+        # Create buttons
+        self.buttons = [
+            # x, y, width, height
+            Button((20, 30, 150, 40), f"Symbol: {self.player_symbol}", gray, light_gray, black, self.toggle_symbol),
+            Button((20, 80, 120, 40), "Reset Game", gray, light_gray, black, self.game_reset),
+            Button((20, 130, 100, 40), "Quit",         gray, light_gray, black, self.quit_game),
+        ]
+
+        # Initialize game state
+        board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
+        self.game_state = GameStatus(board, turn_O=True)
+
         # This sets the WIDTH and HEIGHT of each grid location
-        self.WIDTH = self.size[0]/self.GRID_SIZE - self.OFFSET
-        self.HEIGHT = self.size[1]/self.GRID_SIZE - self.OFFSET
+        self.WIDTH = (self.size[0] - (self.GRID_SIZE + 1) * self.MARGIN) / self.GRID_SIZE
+        self.HEIGHT = ((self.size[1] - self.HEADER_SIZE) / self.GRID_SIZE) - self.OFFSET
 
-        # This sets the margin between each cell
-        self.MARGIN = 5
-
-        # Initialize pygame
-        pygame.init()
-        self.game_reset()
-
-    def draw_game(self):
-        # Create a 2 dimensional array using the column and row variables
-        pygame.init()
+        # Initialize pygame display
         self.screen = pygame.display.set_mode(self.size)
+
+    def draw_board(self):
+        """
+        Draws the static grid and header.
+        """
         pygame.display.set_caption("Tic Tac Toe Random Grid")
         self.screen.fill(self.BLACK)
-        # Draw the grid
-        self.screen.fill(self.BLACK)
+
+        # Draw header area
+        header_rect = pygame.Rect(0, 0, self.size[0], self.HEADER_SIZE)
+        pygame.draw.rect(self.screen, self.WHITE, header_rect)
+
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(self.screen)
+
+        # Draw grid cells
         for row in range(self.GRID_SIZE):
             for col in range(self.GRID_SIZE):
-                rect = pygame.rect(
+                rect = pygame.Rect(
                     col * (self.WIDTH + self.MARGIN) + self.MARGIN,
-                    row * (self.HEIGHT + self.MARGIN) + self.MARGIN,
+                    row * (self.HEIGHT + self.MARGIN) + self.HEADER_SIZE + self.MARGIN,
                     self.WIDTH,
-                    self.HEIGHT
+                    self.HEIGHT,
                 )
                 pygame.draw.rect(self.screen, self.WHITE, rect)
-        """
-        YOUR CODE HERE TO DRAW THE GRID OTHER CONTROLS AS PART OF THE GUI
-        """
-        
 
+        # Draw existing pieces on top
+        self.update_pieces()
         pygame.display.update()
 
-    def change_turn(self):
+    def toggle_symbol(self):
+        self.player_symbol = "O" if self.player_symbol == "X" else "X"
+        print(f"Player symbol changed to {self.player_symbol}")
+        self.buttons[0].text = f"Symbol: {self.player_symbol}"
+        self.draw_board()
 
-        if(self.game_state.turn_O):
+    def quit_game(self):
+        print("Exiting game...")
+        pygame.quit()
+        sys.exit()
+
+    def update_pieces(self):
+        """
+        Redraws all crosses and circles from the board state.
+        """
+        for row in range(self.GRID_SIZE):
+            for col in range(self.GRID_SIZE):
+                val = self.game_state.board_state[row][col]
+                if val == 1:   # X
+                    self.draw_cross(row, col)
+                elif val == -1:  # O
+                    self.draw_circle(row, col)
+
+    def draw_circle(self, row, col):
+        # Calculate cell position
+        x = col * (self.WIDTH + self.MARGIN) + self.MARGIN
+        y = self.HEADER_SIZE + row * (self.HEIGHT + self.MARGIN) + self.MARGIN
+        # Center and radius
+        center = (int(x + self.WIDTH / 2), int(y + self.HEIGHT / 2))
+        radius = int(min(self.WIDTH, self.HEIGHT) // 2 - 10)
+        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, center, radius, 8)
+
+    def draw_cross(self, row, col):
+        """
+        Draws a thick, smooth X using polygons.
+        """
+        x = col * (self.WIDTH + self.MARGIN) + self.MARGIN
+        y = self.HEADER_SIZE + row * (self.HEIGHT + self.MARGIN) + self.MARGIN
+        w = self.WIDTH
+        h = self.HEIGHT
+
+        pad = 25         # distance from cell borders
+        thickness = 18   # thickness of the X arms
+
+        # Diagonal 1: top-left → bottom-right
+        points1 = [
+            (x + pad, y + pad + thickness),
+            (x + pad + thickness, y + pad),
+            (x + w - pad, y + h - pad - thickness),
+            (x + w - pad - thickness, y + h - pad),
+        ]
+
+        # Diagonal 2: top-right → bottom-left
+        points2 = [
+            (x + w - pad - thickness, y + pad),
+            (x + w - pad, y + pad + thickness),
+            (x + pad + thickness, y + h - pad),
+            (x + pad, y + h - pad - thickness),
+        ]
+
+        pygame.draw.polygon(self.screen, self.CROSS_COLOR, points1)
+        pygame.draw.polygon(self.screen, self.CROSS_COLOR, points2)
+
+    def change_turn(self):
+        if self.game_state.turn_O:
             pygame.display.set_caption("Tic Tac Toe - O's turn")
         else:
             pygame.display.set_caption("Tic Tac Toe - X's turn")
 
-
-    def draw_circle(self, x, y):
-        """
-        YOUR CODE HERE TO DRAW THE CIRCLE FOR THE NOUGHTS PLAYER
-        """
-        center_x = int(x * (self.WIDTH + self.MARGIN) + self.WIDTH + self.MARGIN/2)
-        center_y = int(y * (self.HEIGHT + self.MARGIN) + self.HEIGHT + self.MARGIN/2)
-        radius = int(min(self.WIDTH/2 - self.MARGIN) / 2 * 0.8)
-        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, (center_x, center_y), radius, 8)
-        
-
-    def draw_cross(self, x, y):
-        """
-        YOUR CODE HERE TO DRAW THE CROSS FOR THE CROSS PLAYER AT THE CELL THAT IS SELECTED VIA THE gui
-        """
-        x_start = x * (self.WIDTH + self.MARGIN) + self.MARGIN
-        y_start = y * (self.HEIGHT + self.MARGIN) + self.MARGIN
-        offset = self.WIDTH * 0.2
-        pygame.draw.line(self.screen, self.CROSS_COLOR,
-                        (x_start + offset, y_start + offset),
-                        (x_start + self.WIDTH - offset, y_start + self.HEIGHT - offset), 8)
-        pygame.draw.line(self.screen, self.CROSS_COLOR, 
-                        (x_start + self.WIDTH - offset, y_start + offset), 
-                        (x_start + offset, y_start + self.HEIGHT - offset), 8)
-        
-
     def is_game_over(self):
-
-        """
-        YOUR CODE HERE TO SEE IF THE GAME HAS TERMINATED AFTER MAKING A MOVE. YOU SHOULD USE THE IS_TERMINAL()
-        FUNCTION FROM GAMESTATUS_5120.PY FILE (YOU WILL FIRST NEED TO COMPLETE IS_TERMINAL() FUNCTION)
-        
-        YOUR RETURN VALUE SHOULD BE TRUE OR FALSE TO BE USED IN OTHER PARTS OF THE GAME
-        """
-        return GameStatus.is_terminal();
-    
+        return self.game_state.is_terminal()
 
     def move(self, move):
         self.game_state = self.game_state.get_new_state(move)
 
-
+    # IMPLEMENT AI MOVE LOGIC HERE
     def play_ai(self):
-        """
-        YOUR CODE HERE TO CALL MINIMAX OR NEGAMAX DEPENDEING ON WHICH ALGORITHM SELECTED FROM THE GUI
-        ONCE THE ALGORITHM RETURNS THE BEST MOVE TO BE SELECTED, YOU SHOULD DRAW THE NOUGHT (OR CIRCLE DEPENDING
-        ON WHICH SYMBOL YOU SELECTED FOR THE AI PLAYER)
-        
-        THE RETURN VALUES FROM YOUR MINIMAX/NEGAMAX ALGORITHM SHOULD BE THE SCORE, MOVE WHERE SCORE IS AN INTEGER
-        NUMBER AND MOVE IS AN X,Y LOCATION RETURNED BY THE AGENT
-        """
-        
+        # TODO: implement ai move logic with minimax/negamax
         self.change_turn()
         pygame.display.update()
-        terminal = self.game_state.is_terminal()
-        """ USE self.game_state.get_scores(terminal) HERE TO COMPUTE AND DISPLAY THE FINAL SCORES """
-
-
 
     def game_reset(self):
-        self.draw_game()
-        """
-        YOUR CODE HERE TO RESET THE BOARD TO VALUE 0 FOR ALL CELLS AND CREATE A NEW GAME STATE WITH NEWLY INITIALIZED
-        BOARD STATE
-        """
-        
+        board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
+        self.game_state = GameStatus(board, turn_O=True)
+        self.draw_board()
         pygame.display.update()
 
-    def play_game(self, mode = "player_vs_ai"):
+    def play_game(self, mode="player_vs_ai"):
         done = False
-
         clock = pygame.time.Clock()
-
+        self.draw_board()
 
         while not done:
-            for event in pygame.event.get():  # User did something
-                """
-                YOUR CODE HERE TO CHECK IF THE USER CLICKED ON A GRID ITEM. EXIT THE GAME IF THE USER CLICKED EXIT
-                """
-                
-                """
-                YOUR CODE HERE TO HANDLE THE SITUATION IF THE GAME IS OVER. IF THE GAME IS OVER THEN DISPLAY THE SCORE,
-                THE WINNER, AND POSSIBLY WAIT FOR THE USER TO CLEAR THE BOARD AND START THE GAME AGAIN (OR CLICK EXIT)
-                """
-                    
-                """
-                YOUR CODE HERE TO NOW CHECK WHAT TO DO IF THE GAME IS NOT OVER AND THE USER SELECTED A NON EMPTY CELL
-                IF CLICKED A NON EMPTY CELL, THEN GET THE X,Y POSITION, SET ITS VALUE TO 1 (SELECTED BY HUMAN PLAYER),
-                DRAW CROSS (OR NOUGHT DEPENDING ON WHICH SYMBOL YOU CHOSE FOR YOURSELF FROM THE gui) AND CALL YOUR 
-                PLAY_AI FUNCTION TO LET THE AGENT PLAY AGAINST YOU
-                """
-                
-                # if event.type == pygame.MOUSEBUTTONUP:
-                    # Get the position
-                    
-                    # Change the x/y screen coordinates to grid coordinates
-                    
-                    # Check if the game is human vs human or human vs AI player from the GUI. 
-                    # If it is human vs human then your opponent should have the value of the selected cell set to -1
-                    # Then draw the symbol for your opponent in the selected cell
-                    # Within this code portion, continue checking if the game has ended by using is_terminal function
-                    
-            # Update the screen with what was drawn.
+            clock.tick(60)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = True
+
+                # Let buttons handle clicks first
+                for button in self.buttons:
+                    button.handle_event(event)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+
+                    # Ignore clicks in the header (buttons live there)
+                    if pos[1] < self.HEADER_SIZE:
+                        continue
+
+                    column = int(pos[0] // (self.WIDTH + self.MARGIN))
+                    row = int((pos[1] - self.HEADER_SIZE) // (self.HEIGHT + self.MARGIN))
+                    print(f"Click {pos} Grid coordinates: {row}, {column}")
+
+                    # Check click validity
+                    if 0 <= column < self.GRID_SIZE and 0 <= row < self.GRID_SIZE:
+                        if self.game_state.board_state[row][column] == 0:
+                            # Apply move
+                            if self.player_symbol == "X":
+                                self.game_state.board_state[row][column] = 1
+                                self.draw_cross(row, column)
+                            else:
+                                self.game_state.board_state[row][column] = -1
+                                self.draw_circle(row, column)
+
+                            pygame.display.update()
+
+                            # Check if game ended
+                            if not self.is_game_over():
+                                self.play_ai()
+                                self.update_pieces()
+                                pygame.display.update()
+                            else:
+                                print("Game Over")
+                                terminal = self.game_state.is_terminal()
+                                scores = self.game_state.get_scores(terminal)
+                                winner = "Draw"
+                                if scores[0] > scores[1]:
+                                    winner = "O wins!"
+                                elif scores[1] > scores[0]:
+                                    winner = "X wins!"
+                                font = pygame.font.SysFont(None, 48)
+                                text = font.render(f"{winner} Score: O={scores[0]}, X={scores[1]}", True, (255, 0, 0))
+                                self.screen.blit(text, (20, 80))
+                                pygame.display.update()
+                        else:
+                            print("Cell already occupied. Choose another cell.")
             pygame.display.update()
 
         pygame.quit()
 
 tictactoegame = RandomBoardTicTacToe()
-"""
-YOUR CODE HERE TO SELECT THE OPTIONS VIA THE GUI CALLED FROM THE ABOVE LINE
-AFTER THE ABOVE LINE, THE USER SHOULD SELECT THE OPTIONS AND START THE GAME. 
-YOUR FUNCTION PLAY_GAME SHOULD THEN BE CALLED WITH THE RIGHT OPTIONS AS SOON
-AS THE USER STARTS THE GAME
-"""
+tictactoegame.play_game()
