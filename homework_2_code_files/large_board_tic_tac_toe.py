@@ -8,7 +8,6 @@ from GameStatus_5120 import GameStatus
 from multiAgents import minimax, negamax
 import sys, random
 
-mode = "player_vs_ai"  # default mode for playing the game (player vs AI)
 
 screen_width = 600
 screen_height = 600
@@ -58,6 +57,7 @@ class RandomBoardTicTacToe:
         self.CROSS_COLOR = (140, 146, 172)
 
         self.player_symbol = "X"  # Current symbol for human player
+        self.mode = "player_vs_ai"
 
         # Define button colors
         gray = (180, 180, 180)
@@ -68,8 +68,9 @@ class RandomBoardTicTacToe:
         self.buttons = [
             # x, y, width, height
             Button((20, 30, 150, 40), f"Symbol: {self.player_symbol}", gray, light_gray, black, self.toggle_symbol),
-            Button((20, 80, 120, 40), "Reset Game", gray, light_gray, black, self.game_reset),
-            Button((20, 130, 100, 40), "Quit",         gray, light_gray, black, self.quit_game),
+            Button((20, 80, 200, 40), f"Mode", gray, light_gray, black, self.change_mode),
+            Button((20, 130, 120, 40), "Reset Game", gray, light_gray, black, self.game_reset),
+    
         ]
 
         # Initialize game state
@@ -119,10 +120,11 @@ class RandomBoardTicTacToe:
         self.buttons[0].text = f"Symbol: {self.player_symbol}"
         self.draw_board()
 
-    def quit_game(self):
-        print("Exiting game...")
-        pygame.quit()
-        sys.exit()
+    def change_mode(self):
+        self.mode = "player_vs_player" if self.mode == "player_vs_ai" else "player_vs_ai"
+        print(f"Game mode changed to {self.mode}")
+        self.buttons[1].text = f"Mode: {self.mode}"
+        self.draw_board()
 
     def update_pieces(self):
         """
