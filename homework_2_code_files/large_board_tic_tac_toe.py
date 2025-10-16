@@ -74,8 +74,10 @@ class RandomBoardTicTacToe:
         ]
 
         # Initialize game state
+        # If player chooses X, X goes first (turn_O=False)
+        # If player chooses O, O goes first (turn_O=True)
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
-        self.game_state = GameStatus(board, turn_O=True)
+        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"))
 
         # This sets the WIDTH and HEIGHT of each grid location
         self.WIDTH = (self.size[0] - (self.GRID_SIZE + 1) * self.MARGIN) / self.GRID_SIZE
@@ -118,7 +120,8 @@ class RandomBoardTicTacToe:
         self.player_symbol = "O" if self.player_symbol == "X" else "X"
         print(f"Player symbol changed to {self.player_symbol}")
         self.buttons[0].text = f"Symbol: {self.player_symbol}"
-        self.draw_board()
+        # Reset game when symbol changes to apply correct turn order
+        self.game_reset()
 
     def change_mode(self):
         self.mode = "player_vs_player" if self.mode == "player_vs_ai" else "player_vs_ai"
@@ -129,14 +132,15 @@ class RandomBoardTicTacToe:
     def update_pieces(self):
         """
         Redraws all crosses and circles from the board state.
+        According to GameStatus: 1 = O, -1 = X
         """
         for row in range(self.GRID_SIZE):
             for col in range(self.GRID_SIZE):
                 val = self.game_state.board_state[row][col]
-                if val == 1:   # X
-                    self.draw_cross(row, col)
-                elif val == -1:  # O
+                if val == 1:   # O
                     self.draw_circle(row, col)
+                elif val == -1:  # X
+                    self.draw_cross(row, col)
 
     def draw_circle(self, row, col):
         # Calculate cell position
@@ -187,18 +191,70 @@ class RandomBoardTicTacToe:
     def is_game_over(self):
         return self.game_state.is_terminal()
 
+    def get_winner_display(self):
+        """
+        Determines the actual winner based on player symbol choice.
+        Returns (winner_text, color) tuple.
+        """
+        score = self.game_state.get_scores(terminal=True)
+        
+        if score == 0:
+            return "Draw!", (255, 165, 0)  # Orange
+        
+        # Determine who won based on score and player symbol
+        if self.player_symbol == "X":
+            # Human is X (-1), AI is O (1)
+            # Positive score = more X triplets = Human wins
+            if score > 0:
+                return "Human wins!", (0, 255, 0)  # Green
+            else:
+                return "AI wins!", (255, 0, 0)  # Red
+        else:
+            # Human is O (1), AI is X (-1)
+            # Positive score = more X triplets = AI wins
+            if score > 0:
+                return "AI wins!", (255, 0, 0)  # Red
+            else:
+                return "Human wins!", (0, 255, 0)  # Green
+
     def move(self, move):
         self.game_state = self.game_state.get_new_state(move)
 
     # IMPLEMENT AI MOVE LOGIC HERE
     def play_ai(self):
-        # TODO: implement ai move logic with minimax/negamax
-        self.change_turn()
+        """AI makes a move using minimax or negamax algorithm."""
+        if self.is_game_over():
+            return
+
+        possible_moves = self.game_state.get_moves()
+        if not possible_moves:
+            return
+        
+        use_minimax = True  # Change to False to use negamax
+
+        if use_minimax:
+            # Score is from human perspective: positive = human wins, negative = AI wins
+            # AI always wants to MINIMIZE (get negative scores)
+            # Human always wants to MAXIMIZE (get positive scores)
+            # When it's AI's turn, we call minimax with maximizing_player=False
+            _, best_move = minimax(self.game_state, depth=4, maximizing_player=False)
+        else:
+            # For negamax, we use turn_multiplier=-1 for AI (to minimize from human perspective)
+            _, best_move = negamax(self.game_state, depth=4, turn_multiplier=-1)
+
+        if best_move is not None:
+            # Use get_new_state for cleaner state management
+            self.game_state = self.game_state.get_new_state(best_move)
+            
+            self.update_pieces()
+            self.change_turn()
+        
         pygame.display.update()
 
     def game_reset(self):
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
-        self.game_state = GameStatus(board, turn_O=True)
+        # Reset game with proper turn based on player symbol
+        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"))
         self.draw_board()
         pygame.display.update()
 
@@ -232,34 +288,38 @@ class RandomBoardTicTacToe:
                     # Check click validity
                     if 0 <= column < self.GRID_SIZE and 0 <= row < self.GRID_SIZE:
                         if self.game_state.board_state[row][column] == 0:
-                            # Apply move
-                            if self.player_symbol == "X":
-                                self.game_state.board_state[row][column] = 1
-                                self.draw_cross(row, column)
-                            else:
-                                self.game_state.board_state[row][column] = -1
-                                self.draw_circle(row, column)
-
+                            # Apply player move using get_new_state
+                            self.game_state = self.game_state.get_new_state((row, column))
+                            self.update_pieces()
                             pygame.display.update()
 
-                            # Check if game ended
-                            if not self.is_game_over():
-                                self.play_ai()
-                                self.update_pieces()
-                                pygame.display.update()
-                            else:
+                            # Check if game ended after player move
+                            if self.is_game_over():
                                 print("Game Over")
-                                terminal = self.game_state.is_terminal()
-                                scores = self.game_state.get_scores(terminal)
-                                winner = "Draw"
-                                if scores[0] > scores[1]:
-                                    winner = "O wins!"
-                                elif scores[1] > scores[0]:
-                                    winner = "X wins!"
+                                score = self.game_state.get_scores(terminal=True)
+                                winner_text, color = self.get_winner_display()
+                                
+                                # Display winner message
                                 font = pygame.font.SysFont(None, 48)
-                                text = font.render(f"{winner} Score: O={scores[0]}, X={scores[1]}", True, (255, 0, 0))
+                                text = font.render(f"{winner_text} Score: {score}", True, color)
                                 self.screen.blit(text, (20, 80))
                                 pygame.display.update()
+                            else:
+                                # AI's turn if in player vs AI mode
+                                if self.mode == "player_vs_ai":
+                                    self.play_ai()
+                                    
+                                    # Check if game ended after AI move
+                                    if self.is_game_over():
+                                        print("Game Over")
+                                        score = self.game_state.get_scores(terminal=True)
+                                        winner_text, color = self.get_winner_display()
+                                        
+                                        # Display winner message
+                                        font = pygame.font.SysFont(None, 48)
+                                        text = font.render(f"{winner_text} Score: {score}", True, color)
+                                        self.screen.blit(text, (20, 80))
+                                        pygame.display.update()
                         else:
                             print("Cell already occupied. Choose another cell.")
             pygame.display.update()
