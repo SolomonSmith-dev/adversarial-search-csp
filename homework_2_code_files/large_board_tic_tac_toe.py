@@ -11,7 +11,7 @@ import sys, random
 
 screen_width = 600
 screen_height = 600
-HEADER_SIZE = 200
+HEADER_SIZE = 240
 
 pygame.init()
 
@@ -42,66 +42,63 @@ class RandomBoardTicTacToe:
     def __init__(self, size=(screen_width, screen_height + HEADER_SIZE)):
 
         self.size = self.width, self.height = size
-        # Define some colors
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
-        self.GREEN = (0, 255, 0)
-        self.RED = (255, 0, 0)
+        # Define a modern, professional color palette
+        self.DARK_BG = (34, 40, 49)       # Dark charcoal
+        self.BOARD_BG = (57, 62, 70)      # Medium gray
+        self.LINE_COLOR = (78, 86, 98)    # Lighter gray for lines
+        self.WHITE = (238, 238, 238)      # Off-white for text
+        self.SUCCESS_GREEN = (85, 173, 85) # Muted green
+        self.ERROR_RED = (217, 83, 79)    # Muted red
+        self.WARNING_ORANGE = (240, 173, 78) # Muted orange
+        self.ACCENT_BLUE = (52, 152, 219) # Bright blue for highlights
+        self.CIRCLE_COLOR = (70, 171, 219) # A slightly different blue for O
+        self.CROSS_COLOR = (217, 83, 79)   # Muted red for X
 
         # Grid Size
         self.GRID_SIZE = 3
         self.OFFSET = 5
-        self.HEADER_SIZE = 200
-        self.MARGIN = 5
-        self.CIRCLE_COLOR = (140, 146, 172)
-        self.CROSS_COLOR = (140, 146, 172)
-
-        self.player_symbol = "X"  # Current symbol for human player
+        self.HEADER_SIZE = 200 # Reduced header size
+        self.MARGIN = 10
+        
+        self.player_symbol = "X"
         self.mode = "player_vs_ai"
+        self.game_ended = False
+        
+        self.human_wins = 0
+        self.ai_wins = 0
+        self.draws = 0
 
-        # Define button colors
-        gray = (180, 180, 180)
-        light_gray = (220, 220, 220)
-        black = (0, 0, 0)
+        # Modern button styling
+        button_color = (50, 55, 65)
+        button_hover = self.ACCENT_BLUE
+        button_text = self.WHITE
 
-        # Create buttons
         self.buttons = [
-            # x, y, width, height
-            Button((20, 30, 150, 40), f"Symbol: {self.player_symbol}", gray, light_gray, black, self.toggle_symbol),
-            Button((20, 80, 250, 40), f"Mode: {self.mode}", gray, light_gray, black, self.change_mode),
-            Button((20, 130, 150, 40), "Reset", gray, light_gray, black, self.game_reset),
-            Button((430, 30, 150, 40), "Grid:", gray, light_gray, black, self.change_grid_size),
+            Button((20, 20, 160, 45), f"Symbol: {self.player_symbol}", button_color, button_hover, button_text, self.toggle_symbol_button, font_size=24),
+            Button((200, 20, 220, 45), f"Mode: {self.mode.replace('_', ' ').title()}", button_color, button_hover, button_text, self.change_mode_button, font_size=24),
+            Button((440, 20, 140, 45), f"Grid: {self.GRID_SIZE}x{self.GRID_SIZE}", button_color, button_hover, button_text, self.change_grid_size_button, font_size=24),
+            Button((self.width/2 - 50, 75, 100, 40), "Reset", self.ERROR_RED, (192, 57, 43), button_text, self.game_reset_button, font_size=26),
         ]
 
-        # Initialize game state
-        # If player chooses X, X goes first (turn_O=False)
-        # If player chooses O, O goes first (turn_O=True)
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
-        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"))
+        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"), human_symbol=self.player_symbol)
 
-        # This sets the WIDTH and HEIGHT of each grid location
         self.WIDTH = (self.size[0] - (self.GRID_SIZE + 1) * self.MARGIN) / self.GRID_SIZE
         self.HEIGHT = ((self.size[1] - self.HEADER_SIZE) / self.GRID_SIZE) - self.OFFSET
 
-        # Initialize pygame display
         self.screen = pygame.display.set_mode(self.size)
 
     def draw_board(self):
-        """
-        Draws the static grid and header.
-        """
-        pygame.display.set_caption("Tic Tac Toe Random Grid")
-        self.screen.fill(self.BLACK)
+        pygame.display.set_caption("Tic Tac Toe - AI Challenge")
+        self.screen.fill(self.DARK_BG)
+        
+        pygame.draw.rect(self.screen, self.BOARD_BG, (0, 0, self.width, self.HEADER_SIZE))
 
-        # Draw header area
-        header_rect = pygame.Rect(0, 0, self.size[0], self.HEADER_SIZE)
-        pygame.draw.rect(self.screen, self.WHITE, header_rect)
-
-        # Draw buttons
         for button in self.buttons:
             button.draw(self.screen)
+        
+        self.draw_scoreboard()
 
-        # Draw grid cells
         for row in range(self.GRID_SIZE):
             for col in range(self.GRID_SIZE):
                 rect = pygame.Rect(
@@ -110,46 +107,79 @@ class RandomBoardTicTacToe:
                     self.WIDTH,
                     self.HEIGHT,
                 )
-                pygame.draw.rect(self.screen, self.WHITE, rect)
+                pygame.draw.rect(self.screen, self.BOARD_BG, rect, border_radius=8)
+                pygame.draw.rect(self.screen, self.LINE_COLOR, rect, 2, border_radius=8)
 
-        # Draw existing pieces on top
         self.update_pieces()
         pygame.display.update()
+    
+    def draw_scoreboard(self):
+        scoreboard_y = 130
+        
+        score_bg = pygame.Rect(10, scoreboard_y, self.width - 20, 60)
+        pygame.draw.rect(self.screen, self.LINE_COLOR, score_bg, border_radius=12)
+        pygame.draw.rect(self.screen, self.BOARD_BG, score_bg.inflate(-4, -4), border_radius=10)
+        
+        title_font = pygame.font.SysFont('Arial', 22, bold=True)
+        title_text = title_font.render("SCOREBOARD", True, self.ACCENT_BLUE)
+        title_rect = title_text.get_rect(center=(self.width // 2, scoreboard_y + 20))
+        self.screen.blit(title_text, title_rect)
+        
+        score_font = pygame.font.SysFont('Arial', 26, bold=True)
+        scores_text = f"Human: {self.human_wins}    |    AI: {self.ai_wins}    |    Draws: {self.draws}"
+        scores_surface = score_font.render(scores_text, True, self.WHITE)
+        scores_rect = scores_surface.get_rect(center=(self.width // 2, scoreboard_y + 45))
+        self.screen.blit(scores_surface, scores_rect)
 
-    def toggle_symbol(self):
+    def toggle_symbol_button(self):
         self.player_symbol = "O" if self.player_symbol == "X" else "X"
-        print(f"Player symbol changed to {self.player_symbol}")
         self.buttons[0].text = f"Symbol: {self.player_symbol}"
-        # Reset game when symbol changes to apply correct turn order
+        
+        self.human_wins = 0
+        self.ai_wins = 0
+        self.draws = 0
+        
+        self.game_ended = False
         self.game_reset()
 
-    def change_mode(self):
+    def change_mode_button(self):
         self.mode = "player_vs_player" if self.mode == "player_vs_ai" else "player_vs_ai"
-        print(f"Game mode changed to {self.mode}")
-        self.buttons[1].text = f"Mode: {self.mode}"
-        self.draw_board()
+        self.buttons[1].text = f"Mode: {self.mode.replace('_', ' ').title()}"
+        
+        self.human_wins = 0
+        self.ai_wins = 0
+        self.draws = 0
+        
+        self.game_ended = False
+        self.game_reset()
 
-    def change_grid_size(self):
+    def change_grid_size_button(self):
         options = [3, 4, 5]
         
         current_index = options.index(self.GRID_SIZE)
         self.GRID_SIZE = options[(current_index + 1) % len(options)]
-        GameStatus.win_length = self.GRID_SIZE  
-        print(f"Grid size changed to {self.GRID_SIZE}x{self.GRID_SIZE}")
-        # Reset game state with new grid size
+        GameStatus.win_length = 3 # Keep win condition as 3-in-a-row
+        
+        self.game_ended = False
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
-        self.game_state = GameStatus(board, turn_O=True)
-        # Recalculate cell dimensions
+        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"), human_symbol=self.player_symbol)
+        
         self.WIDTH = (self.size[0] - (self.GRID_SIZE + 1) * self.MARGIN) / self.GRID_SIZE
         self.HEIGHT = ((self.size[1] - self.HEADER_SIZE) / self.GRID_SIZE) - self.OFFSET
-        self.buttons[3].text = f"Grid: {self.GRID_SIZE}"
+        self.buttons[2].text = f"Grid: {self.GRID_SIZE}x{self.GRID_SIZE}"
         self.draw_board()
+
+    def game_reset_button(self):
+        print("Game reset")
+        self.game_ended = False
+        self.game_reset()
                                                             
     def update_pieces(self):
-        """
-        Redraws all crosses and circles from the board state.
-        According to GameStatus: 1 = O, -1 = X
-        """
+        pygame.draw.rect(self.screen, self.BOARD_BG, (0, 0, self.width, self.HEADER_SIZE))
+        for button in self.buttons:
+            button.draw(self.screen)
+        self.draw_scoreboard()
+        
         for row in range(self.GRID_SIZE):
             for col in range(self.GRID_SIZE):
                 val = self.game_state.board_state[row][col]
@@ -159,40 +189,33 @@ class RandomBoardTicTacToe:
                     self.draw_cross(row, col)
 
     def draw_circle(self, row, col):
-        # Calculate cell position
         x = col * (self.WIDTH + self.MARGIN) + self.MARGIN
         y = self.HEADER_SIZE + row * (self.HEIGHT + self.MARGIN) + self.MARGIN
-        # Center and radius
         center = (int(x + self.WIDTH / 2), int(y + self.HEIGHT / 2))
-        radius = int(min(self.WIDTH, self.HEIGHT) // 2 - 10)
-        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, center, radius, 8)
+        radius = int(min(self.WIDTH, self.HEIGHT) // 2 - 15)
+        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, center, radius, 10)
 
     def draw_cross(self, row, col):
-        """
-        Draws a thick, smooth X using polygons.
-        """
         x = col * (self.WIDTH + self.MARGIN) + self.MARGIN
         y = self.HEADER_SIZE + row * (self.HEIGHT + self.MARGIN) + self.MARGIN
         w = self.WIDTH
         h = self.HEIGHT
 
-        pad = 25         # distance from cell borders
-        thickness = 18   # thickness of the X arms
+        pad = 30
+        thickness = 20
 
-        # Diagonal 1: top-left → bottom-right
         points1 = [
-            (x + pad, y + pad + thickness),
-            (x + pad + thickness, y + pad),
-            (x + w - pad, y + h - pad - thickness),
-            (x + w - pad - thickness, y + h - pad),
+            (x + pad, y + pad + thickness / 2),
+            (x + pad + thickness / 2, y + pad),
+            (x + w - pad, y + h - pad - thickness / 2),
+            (x + w - pad - thickness / 2, y + h - pad),
         ]
 
-        # Diagonal 2: top-right → bottom-left
         points2 = [
-            (x + w - pad - thickness, y + pad),
-            (x + w - pad, y + pad + thickness),
-            (x + pad + thickness, y + h - pad),
-            (x + pad, y + h - pad - thickness),
+            (x + w - pad - thickness / 2, y + pad),
+            (x + w - pad, y + pad + thickness / 2),
+            (x + pad + thickness / 2, y + h - pad),
+            (x + pad, y + h - pad - thickness / 2),
         ]
 
         pygame.draw.polygon(self.screen, self.CROSS_COLOR, points1)
@@ -200,45 +223,39 @@ class RandomBoardTicTacToe:
 
     def change_turn(self):
         if self.game_state.turn_O:
-            pygame.display.set_caption("Tic Tac Toe - O's turn")
+            pygame.display.set_caption("Tic Tac Toe - O's Turn")
         else:
-            pygame.display.set_caption("Tic Tac Toe - X's turn")
+            pygame.display.set_caption("Tic Tac Toe - X's Turn")
 
     def is_game_over(self):
         return self.game_state.is_terminal()
 
-    def get_winner_display(self):
-        """
-        Determines the actual winner based on player symbol choice.
-        Returns (winner_text, color) tuple.
-        """
+    def update_persistent_score(self):
         score = self.game_state.get_scores(terminal=True)
         
         if score == 0:
-            return "Draw!", (255, 165, 0)  # Orange
-        
-        # Determine who won based on score and player symbol
-        if self.player_symbol == "X":
-            # Human is X (-1), AI is O (1)
-            # Positive score = more X triplets = Human wins
-            if score > 0:
-                return "Human wins!", (0, 255, 0)  # Green
-            else:
-                return "AI wins!", (255, 0, 0)  # Red
+            self.draws += 1
+        elif score > 0:
+            self.human_wins += 1
         else:
-            # Human is O (1), AI is X (-1)
-            # Positive score = more X triplets = AI wins
-            if score > 0:
-                return "AI wins!", (255, 0, 0)  # Red
-            else:
-                return "Human wins!", (0, 255, 0)  # Green
+            self.ai_wins += 1
+    
+    def get_winner_display(self):
+        score = self.game_state.get_scores(terminal=True)
+        
+        if score == 0:
+            return "It's a Draw!", self.WARNING_ORANGE
+        elif score > 0:
+            return "Human Wins!", self.SUCCESS_GREEN
+        else:
+            return "AI Wins!", self.ERROR_RED
 
     def move(self, move):
         self.game_state = self.game_state.get_new_state(move)
 
-    # IMPLEMENT AI MOVE LOGIC HERE
     def play_ai(self):
-        """AI makes a move using minimax or negamax algorithm."""
+        print(f"AI turn: turn_O={self.game_state.turn_O}, player_symbol={self.player_symbol}")
+        
         if self.is_game_over():
             return
 
@@ -246,20 +263,18 @@ class RandomBoardTicTacToe:
         if not possible_moves:
             return
         
-        use_minimax = True  # Change to False to use negamax
+        # Let's use Negamax for the AI player
+        use_minimax = False
 
         if use_minimax:
-            # Score is from human perspective: positive = human wins, negative = AI wins
-            # AI always wants to MINIMIZE (get negative scores)
-            # Human always wants to MAXIMIZE (get positive scores)
-            # When it's AI's turn, we call minimax with maximizing_player=False
             _, best_move = minimax(self.game_state, depth=4, maximizing_player=False)
         else:
-            # For negamax, we use turn_multiplier=-1 for AI (to minimize from human perspective)
-            _, best_move = negamax(self.game_state, depth=4, turn_multiplier=-1)
+            # For negamax, turn_multiplier is -1 for AI, 1 for human
+            turn_multiplier = 1 if self.game_state.turn_O == (self.player_symbol == "O") else -1
+            _, best_move = negamax(self.game_state, depth=4, turn_multiplier=turn_multiplier)
 
         if best_move is not None:
-            # Use get_new_state for cleaner state management
+            print(f"AI chose move: {best_move}")
             self.game_state = self.game_state.get_new_state(best_move)
             
             self.update_pieces()
@@ -269,8 +284,7 @@ class RandomBoardTicTacToe:
 
     def game_reset(self):
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
-        # Reset game with proper turn based on player symbol
-        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"))
+        self.game_state = GameStatus(board, turn_O=(self.player_symbol == "O"), human_symbol=self.player_symbol)
         self.draw_board()
         pygame.display.update()
 
@@ -278,6 +292,9 @@ class RandomBoardTicTacToe:
         done = False
         clock = pygame.time.Clock()
         self.draw_board()
+        
+        if self.mode == "player_vs_ai" and self.player_symbol == "O":
+            self.play_ai()
 
         while not done:
             clock.tick(60)
@@ -286,55 +303,70 @@ class RandomBoardTicTacToe:
                 if event.type == pygame.QUIT:
                     done = True
 
-                # Let buttons handle clicks first
                 for button in self.buttons:
                     button.handle_event(event)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
 
-                    # Ignore clicks in the header (buttons live there)
                     if pos[1] < self.HEADER_SIZE:
+                        continue
+
+                    if self.game_ended:
+                        print("Game is over. Please reset to play again.")
                         continue
 
                     column = int(pos[0] // (self.WIDTH + self.MARGIN))
                     row = int((pos[1] - self.HEADER_SIZE) // (self.HEIGHT + self.MARGIN))
-                    print(f"Click {pos} Grid coordinates: {row}, {column}")
-
-                    # Check click validity
+                    
                     if 0 <= column < self.GRID_SIZE and 0 <= row < self.GRID_SIZE:
                         if self.game_state.board_state[row][column] == 0:
-                            # Apply player move using get_new_state
+                            is_player_turn = (self.player_symbol == "X" and not self.game_state.turn_O) or \
+                                           (self.player_symbol == "O" and self.game_state.turn_O)
+                            
+                            if not is_player_turn and self.mode == "player_vs_ai":
+                                print("Not your turn! Wait for AI...")
+                                continue
+                                
                             self.game_state = self.game_state.get_new_state((row, column))
                             self.update_pieces()
                             pygame.display.update()
 
-                            # Check if game ended after player move
                             if self.is_game_over():
-                                print("Game Over")
-                                score = self.game_state.get_scores(terminal=True)
+                                self.game_ended = True
+                                self.update_persistent_score()
                                 winner_text, color = self.get_winner_display()
+                                self.draw_scoreboard()
                                 
-                                # Display winner message
-                                font = pygame.font.SysFont(None, 48)
-                                text = font.render(f"{winner_text} Score: {score}", True, color)
-                                self.screen.blit(text, (20, 80))
+                                font = pygame.font.SysFont('Arial', 52, bold=True)
+                                text = font.render(winner_text, True, color)
+                                text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE / 2 + 20))
+                                
+                                # Add a subtle shadow effect
+                                shadow = font.render(winner_text, True, (0,0,0,50))
+                                self.screen.blit(shadow, text_rect.move(2,2))
+                                self.screen.blit(text, text_rect)
+                                
                                 pygame.display.update()
                             else:
-                                # AI's turn if in player vs AI mode
                                 if self.mode == "player_vs_ai":
+                                    pygame.time.wait(500) # Add a small delay for realism
                                     self.play_ai()
                                     
-                                    # Check if game ended after AI move
                                     if self.is_game_over():
-                                        print("Game Over")
-                                        score = self.game_state.get_scores(terminal=True)
+                                        self.game_ended = True
+                                        self.update_persistent_score()
                                         winner_text, color = self.get_winner_display()
+                                        self.draw_scoreboard()
                                         
-                                        # Display winner message
-                                        font = pygame.font.SysFont(None, 48)
-                                        text = font.render(f"{winner_text} Score: {score}", True, color)
-                                        self.screen.blit(text, (20, 80))
+                                        font = pygame.font.SysFont('Arial', 52, bold=True)
+                                        text = font.render(winner_text, True, color)
+                                        text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE / 2 + 20))
+                                        
+                                        shadow = font.render(winner_text, True, (0,0,0,50))
+                                        self.screen.blit(shadow, text_rect.move(2,2))
+                                        self.screen.blit(text, text_rect)
+                                        
                                         pygame.display.update()
                         else:
                             print("Cell already occupied. Choose another cell.")
