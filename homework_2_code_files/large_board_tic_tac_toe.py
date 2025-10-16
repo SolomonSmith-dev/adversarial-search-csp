@@ -129,6 +129,22 @@ class RandomBoardTicTacToe:
         self.buttons[1].text = f"Mode: {self.mode}"
         self.draw_board()
 
+    def change_grid_size(self):
+        options = [3, 4, 5]
+        
+        current_index = options.index(self.GRID_SIZE)
+        self.GRID_SIZE = options[(current_index + 1) % len(options)]
+        GameStatus.win_length = self.GRID_SIZE  
+        print(f"Grid size changed to {self.GRID_SIZE}x{self.GRID_SIZE}")
+        # Reset game state with new grid size
+        board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
+        self.game_state = GameStatus(board, turn_O=True)
+        # Recalculate cell dimensions
+        self.WIDTH = (self.size[0] - (self.GRID_SIZE + 1) * self.MARGIN) / self.GRID_SIZE
+        self.HEIGHT = ((self.size[1] - self.HEADER_SIZE) / self.GRID_SIZE) - self.OFFSET
+        self.buttons[3].text = f"Grid: {self.GRID_SIZE}"
+        self.draw_board()
+                                                            
     def update_pieces(self):
         """
         Redraws all crosses and circles from the board state.
