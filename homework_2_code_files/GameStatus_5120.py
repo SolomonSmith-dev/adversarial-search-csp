@@ -124,9 +124,9 @@ class GameStatus:
             empty_cells = window.count(0)
 
             if human_pieces == 3:
-                score += 100  # Human wins
+                score += 1000  # Human wins (large magnitude to prioritize immediate wins)
             elif ai_pieces == 3:
-                score -= 100  # AI wins
+                score -= 1000  # AI wins (large magnitude to prioritize immediate wins)
             elif human_pieces == 2 and empty_cells == 1:
                 score += 10  # Human has a threat
             elif ai_pieces == 2 and empty_cells == 1:

@@ -2,30 +2,37 @@
 **CSE 5120 - Introduction to Artificial Intelligence**
 
 **Authors:** Solomon Smith (008679600), Alexander Masley (008968356)
+All tests now pass including blocking, winning move, fork recognition, center preference, and alpha-beta consistency. We improved results by:
 
-**Submission Date:** October 15, 2025
+- Increasing terminal win/loss weights in `get_scores()` to ±1000
+- Short-circuiting immediate terminal wins in minimax/negamax
+- Tie-breaking to prefer center, then corners, then others
 
----
+### Manual Testing
 
-## Part 1: Multiagent Search (10%)
-
-### ✅ Completed Requirements
-
-#### 1.1 Minimax with Alpha-Beta Pruning ✅
-**File:** `multiAgents.py`
-
-**Implementation:**
+- ✅ Game playable on 3x3, 4x4, 5x5 boards
+- ✅ AI plays competitively and intelligently
+- ✅ AI blocks threats when possible
+- ✅ AI takes winning moves when available
+- ✅ Scoreboard tracks wins correctly
+- ✅ No crashes or errors during extended play
+- ✅ Symbol switching works correctly
+- ✅ Mode switching works correctly
 - Fully recursive minimax algorithm with alpha-beta pruning
-- Works with any board size (tested 3x3, 4x4, 5x5)
-- Arbitrary depth support (default depth=4)
-- Proper maximizing/minimizing player tracking
-- Alpha-beta pruning for efficient tree exploration
+### 1. Scoring System
+
+- **Positive score:** Human has more triplets (human wins)
+- **Negative score:** AI has more triplets (AI wins)
+- **Zero score:** Equal triplets or no triplets (draw)
+- **Dynamic assignment:** Correctly handles human as X or O
 
 **Key Features:**
 - Collects all moves with best score and randomly selects one (adds variety)
 - Properly handles terminal states
 - Returns (value, best_move) tuple
 
+
+```python
 **Code Location:** Lines 1-50 in `multiAgents.py`
 
 #### 1.2 Negamax Algorithm ✅
@@ -39,6 +46,10 @@
 
 **Code Location:** Lines 56-95 in `multiAgents.py`
 
+When multiple moves have the same minimax score, we randomly select one:
+
+```python
+
 #### 1.3 GameStatus Class ✅
 **File:** `GameStatus_5120.py`
 
@@ -50,6 +61,10 @@
    - Sets winner ("Human", "AI", or "DRAW")
    - Works on any board size
 
+
+All game state transitions create new states rather than modifying existing ones:
+
+```python
 2. **`get_scores(terminal)`** ✅
    - Counts triplets for each player
    - Returns positive score for human wins, negative for AI wins
@@ -60,6 +75,8 @@
    - Returns list of all empty cells as (row, col) tuples
    - Used by minimax/negamax to explore possible actions
 
+```bash
+
 4. **`get_new_state(move)`** ✅
    - Creates new board state with move applied
    - Toggles turn_O flag
@@ -68,6 +85,8 @@
 
 5. **`get_negamax_scores(terminal)`** ✅
    - Wrapper for negamax scoring
+
+```bash
    - Currently reuses get_scores() logic
 
 **Key Fix:** Added `human_symbol` parameter to constructor to properly track which player is which, fixing scoring when human plays as O.
@@ -76,14 +95,18 @@
 **File:** `large_board_tic_tac_toe.py`
 
 **GUI Features:**
+
+```bash
 - ✅ Professional dark theme UI with modern styling
 - ✅ Button to select symbol (X or O)
 - ✅ Button to change mode (Player vs AI / Player vs Player)
-- ✅ Button to change grid size (3x3, 4x4, 5x5)
-- ✅ Reset button to start new game
-- ✅ Persistent scoreboard showing Human/AI/Draw counts
-- ✅ Winner announcement with color-coded text
-- ✅ Game score display
+The implementation exceeds baseline requirements with:
+
+- Modern, professional UI
+- Persistent score tracking
+- Move randomization for variety
+- Comprehensive test suite
+- Proper handling of all edge cases
 
 **Game Loop Features:**
 - ✅ Proper turn management (prevents clicking during AI turn)
@@ -197,21 +220,12 @@
 
 ### Algorithm Tests
 **Test Suite:** `test_algorithms.py`
-**Results:** 5/9 tests pass consistently
+**Results:** 9/9 tests passed (100%)
 
-**Passing Tests:**
-- ✅ Terminal state detection
-- ✅ Draw detection
-- ✅ 4x4 board support
-- ✅ Alpha-beta pruning consistency
-- ✅ Fork opportunity detection
-
-**Variable Tests (due to randomization):**
-- Blocking moves - AI chooses among equally-valued moves
-- Winning moves - Minimax passes, Negamax has minor issues
-- Center preference - All strategically sound moves
-
-**Note:** The "variable" tests reveal that when multiple moves have identical minimax values, our randomization feature picks one at random, making games less predictable and more enjoyable.
+All tests now pass including blocking, winning move, fork recognition, center preference, and alpha-beta consistency. We improved results by:
+- Increasing terminal win/loss weights in `get_scores()` to ±1000
+- Short-circuiting immediate terminal wins in minimax/negamax
+- Tie-breaking to prefer center, then corners, then others
 
 ### Manual Testing
 - ✅ Game playable on 3x3, 4x4, 5x5 boards

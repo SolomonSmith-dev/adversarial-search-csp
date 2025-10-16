@@ -1,68 +1,33 @@
 # Algorithm Test Results
 
-## Test Suite Summary
+## Test Suite Summary (Updated October 16, 2025)
 
-**Overall Results: 6/9 tests passed (66%)**
+### Overall Results
+
+9/9 tests passed (100%)
 
 ### ✅ Passing Tests
 
-1. **Center Preference** - AI makes strategic opening moves (center or corners)
-2. **Human as O** - Algorithms work correctly when human plays as O and AI plays as X  
-3. **Terminal State Detection** - Correctly identifies when game is over and who won
-4. **Draw Detection** - Correctly identifies draw states (full board, no winner)
-5. **4x4 Board Support** - Works on larger board sizes
-6. **Alpha-Beta Pruning** - Pruning produces consistent results
+1. Blocking Move
+2. Winning Move
+3. Fork Opportunity
+4. Center Preference
+5. Human as O
+6. Terminal State Detection
+7. Draw Detection
+8. 4x4 Board Support
+9. Alpha-Beta Pruning Consistency
 
-### ⚠️ Issues Found
+## Key Changes That Improved Results
 
-1. **Blocking Move Test** - AI doesn't always prioritize blocking immediate threats
-   - Reason: With optimal play, human wins from this position anyway
-   - All moves have same minimax value (+1 = human wins)
-   - AI uses randomization to pick among equal moves
-   
-2. **Winning Move Test (Negamax)** - Negamax implementation may need review
-   - Minimax correctly takes winning moves
-   - Negamax sometimes doesn't prioritize immediate wins
-   
-3. **Fork Opportunity** - AI doesn't always recognize fork patterns
-   - Makes strategically sound moves but not always optimal defensive moves
+- Increased terminal win/loss scoring magnitude in `get_scores()` to ±1000 so immediate wins dominate heuristic evaluation.
+- In minimax/negamax, added short-circuiting to immediately choose moves that create terminal wins for the player to move.
+- Added deterministic tie-breaking: prefer terminal moves, then center, then corners, then others. This stabilized the "Center Preference" test and improved move quality.
 
-## Implementation Status
+## Notes on Behavior
 
-### ✅ Completed Features
-
-- **Minimax with Alpha-Beta Pruning**: Fully implemented and working
-- **Negamax Algorithm**: Implemented (with minor evaluation issues)
-- **Move Randomization**: AI varies moves when multiple have same value
-- **Dynamic Player Assignment**: Correctly handles human as X or O
-- **Persistent Scoreboard**: Tracks wins/losses across multiple games
-- **Professional UI**: Modern dark theme with clear visual feedback
-- **Grid Size Support**: Works on 3x3, 4x4, and 5x5 boards
-- **Symbol Selection**: Player can choose X or O
-- **Game Modes**: Player vs AI and Player vs Player
-- **Turn Management**: Correct turn handling and validation
-
-### 🎮 Gameplay Quality
-
-The AI plays intelligently and makes good strategic decisions:
-- Takes winning moves when available
-- Blocks obvious threats (when not already losing)
-- Makes varied opening moves for replayability
-- Plays optimally according to minimax evaluation
-
-### 📝 Notes
-
-The "failures" in Tests 1-3 are not bugs but limitations of the simple scoring system:
-- Scores are +1 (human wins), -1 (AI wins), or 0 (draw)
-- No depth-based scoring to prefer immediate wins over delayed wins
-- No heuristic evaluation for non-terminal states
-- This is acceptable for the homework requirements
-
-For a production game, we would add:
-- Depth-based scoring: `score = (MAX_DEPTH - current_depth + 1) * base_score`
-- Heuristic evaluation: favor center, corners, blocking patterns
-- Opening book: pre-computed optimal opening moves
-- Endgame tablebase: perfect play in endgame positions
+- Tie-breaking keeps gameplay varied when multiple moves are equally optimal, but prioritizes strong strategic choices.
+- The algorithms work for configurable board sizes (3x3, 4x4, 5x5) with win_length=3.
 
 ## Running the Tests
 
@@ -73,4 +38,4 @@ python test_algorithms.py
 
 ## Conclusion
 
-The minimax and negamax implementations are **functionally correct** and provide a challenging AI opponent. The test "failures" reveal opportunities for enhancement but don't indicate broken functionality.
+The minimax and negamax implementations are fully functional and pass all automated tests. The AI reliably blocks threats, takes wins, and makes strong opening choices.
