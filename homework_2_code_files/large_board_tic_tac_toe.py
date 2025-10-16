@@ -68,8 +68,8 @@ class RandomBoardTicTacToe:
         self.buttons = [
             # x, y, width, height
             Button((20, 30, 150, 40), f"Symbol: {self.player_symbol}", gray, light_gray, black, self.toggle_symbol),
-            Button((20, 80, 200, 40), f"Mode", gray, light_gray, black, self.change_mode),
-            Button((20, 130, 120, 40), "Reset Game", gray, light_gray, black, self.game_reset),
+            Button((20, 80, 250, 40), f"Mode: {self.mode}", gray, light_gray, black, self.change_mode),
+            Button((20, 130, 150, 40), "Reset Game", gray, light_gray, black, self.game_reset),
     
         ]
 
