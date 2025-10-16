@@ -42,7 +42,7 @@ class RandomBoardTicTacToe:
     def __init__(self, size=(screen_width, screen_height + HEADER_SIZE)):
 
         self.size = self.width, self.height = size
-        # Define a modern, professional color palette
+        # Define a modern, professional color palette (Modern Dark)
         self.DARK_BG = (34, 40, 49)       # Dark charcoal
         self.BOARD_BG = (57, 62, 70)      # Medium gray
         self.LINE_COLOR = (78, 86, 98)    # Lighter gray for lines
@@ -51,14 +51,14 @@ class RandomBoardTicTacToe:
         self.ERROR_RED = (217, 83, 79)    # Muted red
         self.WARNING_ORANGE = (240, 173, 78) # Muted orange
         self.ACCENT_BLUE = (52, 152, 219) # Bright blue for highlights
-        self.CIRCLE_COLOR = (70, 171, 219) # A slightly different blue for O
-        self.CROSS_COLOR = (217, 83, 79)   # Muted red for X
 
         # Grid Size
         self.GRID_SIZE = 3
         self.OFFSET = 5
-        self.HEADER_SIZE = 200 # Reduced header size
-        self.MARGIN = 10
+        self.HEADER_SIZE = 240
+        self.MARGIN = 8
+        self.CIRCLE_COLOR = (70, 171, 219) # A slightly different blue for O
+        self.CROSS_COLOR = (217, 83, 79)   # Muted red for X
         
         self.player_symbol = "X"
         self.mode = "player_vs_ai"
