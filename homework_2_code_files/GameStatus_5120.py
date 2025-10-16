@@ -8,6 +8,7 @@ class GameStatus:
         self.turn_O = turn_O
         self.oldScores = 0
         self.winner = ""
+        self.win_length = 3
 
     def is_terminal(self):
         """
@@ -16,6 +17,7 @@ class GameStatus:
         """
         rows = len(self.board_state)
         cols = len(self.board_state[0])
+        k = self.win_length
 
         # Check horizontal triplets
         for r in range(rows):
@@ -25,10 +27,10 @@ class GameStatus:
                     + self.board_state[r][c + 1]
                     + self.board_state[r][c + 2]
                 )
-                if s == 3:
+                if s == k:
                     self.winner = "AI"
                     return True
-                elif s == -3:
+                elif s == -k:
                     self.winner = "Human"
                     return True
 
@@ -40,10 +42,10 @@ class GameStatus:
                     + self.board_state[r + 1][c]
                     + self.board_state[r + 2][c]
                 )
-                if s == 3:
+                if s == k:
                     self.winner = "AI"
                     return True
-                elif s == -3:
+                elif s == -k:
                     self.winner = "Human"
                     return True
 
@@ -55,10 +57,10 @@ class GameStatus:
                     + self.board_state[r + 1][c + 1]
                     + self.board_state[r + 2][c + 2]
                 )
-                if s == 3:
+                if s == k:
                     self.winner = "AI"
                     return True
-                elif s == -3:
+                elif s == -k:
                     self.winner = "Human"
                     return True
 
@@ -70,10 +72,10 @@ class GameStatus:
                     + self.board_state[r - 1][c + 1]
                     + self.board_state[r - 2][c + 2]
                 )
-                if s == 3:
+                if s == k:
                     self.winner = "AI"
                     return True
-                elif s == -3:
+                elif s == -k:
                     self.winner = "Human"
                     return True
 
