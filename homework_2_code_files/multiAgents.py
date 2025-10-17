@@ -2,7 +2,10 @@ from GameStatus_5120 import GameStatus
 import random
 
 
-def minimax(game_state: GameStatus, depth: int, maximizing_player: bool, alpha=float('-inf'), beta=float('inf')):
+def minimax(game_state: GameStatus, depth: int, maximizing_player: bool = None, maximizingPlayer: bool = None, alpha=float('-inf'), beta=float('inf')):
+    # Accept both 'maximizing_player' and 'maximizingPlayer' parameter names for compatibility
+    if maximizing_player is None and maximizingPlayer is not None:
+        maximizing_player = maximizingPlayer
     terminal = game_state.is_terminal()
     if (depth == 0) or (terminal):
         newScores = game_state.get_scores(terminal)

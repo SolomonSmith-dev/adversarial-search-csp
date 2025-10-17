@@ -221,6 +221,94 @@ class RandomBoardTicTacToe:
         pygame.draw.polygon(self.screen, self.CROSS_COLOR, points1)
         pygame.draw.polygon(self.screen, self.CROSS_COLOR, points2)
 
+    def find_all_triplets(self):
+        """Scan the current board and return all length-3 triplets.
+
+        Returns a list of tuples: (ttype, start_row, start_col, value)
+        where ttype is one of 'horizontal', 'vertical', 'diagonal_dr', 'diagonal_dl'
+        and value is 1 (O) or -1 (X).
+        """
+        B = self.game_state.board_state
+        R = self.GRID_SIZE
+        C = self.GRID_SIZE
+        L = 3
+        triplets = []
+
+        # horizontal
+        for r in range(R):
+            for c in range(C - L + 1):
+                vals = [B[r][c + k] for k in range(L)]
+                if vals[0] != 0 and all(v == vals[0] for v in vals):
+                    triplets.append(('horizontal', r, c, vals[0]))
+
+        # vertical
+        for c in range(C):
+            for r in range(R - L + 1):
+                vals = [B[r + k][c] for k in range(L)]
+                if vals[0] != 0 and all(v == vals[0] for v in vals):
+                    triplets.append(('vertical', r, c, vals[0]))
+
+        # diagonal down-right
+        for r in range(R - L + 1):
+            for c in range(C - L + 1):
+                vals = [B[r + k][c + k] for k in range(L)]
+                if vals[0] != 0 and all(v == vals[0] for v in vals):
+                    triplets.append(('diagonal_dr', r, c, vals[0]))
+
+        # diagonal down-left
+        for r in range(R - L + 1):
+            for c in range(L - 1, C):
+                vals = [B[r + k][c - k] for k in range(L)]
+                if vals[0] != 0 and all(v == vals[0] for v in vals):
+                    triplets.append(('diagonal_dl', r, c, vals[0]))
+
+        return triplets
+
+    def draw_win_highlight(self):
+        """Draw a semi-transparent highlight over winning triplet(s) for 3x3 games."""
+        # Only apply for 3x3
+        if self.GRID_SIZE != 3:
+            return
+        triplets = self.find_all_triplets()
+        if not triplets:
+            return
+        # Use accent color with transparency
+        highlight_color = (*self.ACCENT_BLUE, 120) if len(self.ACCENT_BLUE) == 3 else self.ACCENT_BLUE
+        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        for t in triplets:
+            ttype, r, c, val = t
+            # compute rectangle covering the triplet
+            if ttype == 'horizontal':
+                x1 = c * (self.WIDTH + self.MARGIN) + self.MARGIN
+                y1 = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN
+                w = self.WIDTH * 3 + self.MARGIN * 2
+                h = self.HEIGHT
+                rect = pygame.Rect(int(x1), int(y1), int(w), int(h))
+            elif ttype == 'vertical':
+                x1 = c * (self.WIDTH + self.MARGIN) + self.MARGIN
+                y1 = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN
+                w = self.WIDTH
+                h = self.HEIGHT * 3 + self.MARGIN * 2
+                rect = pygame.Rect(int(x1), int(y1), int(w), int(h))
+            elif ttype == 'diagonal_dr':
+                # Draw a thick diagonal rectangle by drawing a rotated polygon
+                start_x = c * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
+                start_y = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
+                end_x = (c + 2) * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
+                end_y = self.HEADER_SIZE + (r + 2) * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
+                pygame.draw.line(s, (*self.ACCENT_BLUE, 140), (int(start_x), int(start_y)), (int(end_x), int(end_y)), 20)
+                continue
+            else:  # diagonal_dl
+                start_x = c * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
+                start_y = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
+                end_x = (c - 2) * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
+                end_y = self.HEADER_SIZE + (r + 2) * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
+                pygame.draw.line(s, (*self.ACCENT_BLUE, 140), (int(start_x), int(start_y)), (int(end_x), int(end_y)), 20)
+                continue
+            # fill semi-transparent rectangle
+            pygame.draw.rect(s, (*self.ACCENT_BLUE, 80), rect, border_radius=8)
+        self.screen.blit(s, (0, 0))
+
     def change_turn(self):
         if self.game_state.turn_O:
             pygame.display.set_caption("Tic Tac Toe - O's Turn")
@@ -338,6 +426,8 @@ class RandomBoardTicTacToe:
                                 score = self.game_state.get_scores(terminal)
                                 self.game_ended = True
                                 self.update_persistent_score()
+                                # Highlight winning triplet(s) immediately for 3x3
+                                self.draw_win_highlight()
                                 winner_text, color = self.get_winner_display()
                                 self.draw_scoreboard()
                                 
@@ -362,6 +452,8 @@ class RandomBoardTicTacToe:
                                         score = self.game_state.get_scores(terminal)
                                         self.game_ended = True
                                         self.update_persistent_score()
+                                        # Highlight winning triplet(s) immediately for 3x3
+                                        self.draw_win_highlight()
                                         winner_text, color = self.get_winner_display()
                                         self.draw_scoreboard()
                                         

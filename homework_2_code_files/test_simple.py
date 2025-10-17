@@ -24,18 +24,18 @@ def test_terminal_only_when_full():
     print("TEST 1: Terminal State - Board Must Be Full")
     print("=" * 60)
     
-    # Board with triplet but NOT full - should NOT be terminal
+    # Board with triplet (3x3) - per new rule, a 3x3 game ends on first triplet
     board1 = np.array([
         [-1, -1, -1],  # XXX - triplet!
         [1, 1, 0],
         [0, 0, 0]
     ])
     game1 = GameStatus(board1, turn_O=True, human_symbol="X")
-    print("Board with XXX triplet but not full:")
+    print("Board with XXX triplet (3x3):")
     print_board(board1)
-    print(f"Is terminal? {game1.is_terminal()} (should be False)")
-    assert not game1.is_terminal(), "❌ FAIL: Non-full board marked as terminal!"
-    print("✅ PASS: Non-full board correctly NOT terminal\n")
+    print(f"Is terminal? {game1.is_terminal()} (should be True for 3x3 immediate win)")
+    assert game1.is_terminal(), "❌ FAIL: 3x3 board with triplet was not marked terminal!"
+    print("✅ PASS: 3x3 board with triplet correctly marked terminal\n")
     
     # Full board - should BE terminal
     board2 = np.array([
@@ -107,7 +107,7 @@ def test_minimax_basic():
     print_board(board)
     
     # AI (O) turn - minimizing player
-    score, move = minimax(game, depth=3, maximizingPlayer=False)
+    score, move = minimax(game, depth=3, maximizing_player=False)
     print(f"Minimax (AI/O) chose: {move}, score: {score}")
     
     valid_moves = game.get_moves()
@@ -198,7 +198,7 @@ def test_4x4_board():
     print_board(board)
     
     try:
-        score, move = minimax(game, depth=3, maximizingPlayer=False)
+        score, move = minimax(game, depth=3, maximizing_player=False)
         print(f"Minimax chose: {move}, score: {score}")
         
         if move in game.get_moves():
@@ -227,7 +227,7 @@ def test_5x5_board():
     print_board(board)
     
     try:
-        score, move = minimax(game, depth=2, maximizingPlayer=False)
+        score, move = minimax(game, depth=2, maximizing_player=False)
         print(f"Minimax chose: {move}, score: {score}")
         
         if move in game.get_moves():
