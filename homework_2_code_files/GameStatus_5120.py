@@ -13,81 +13,13 @@ class GameStatus:
 
     def is_terminal(self):
         """
-        YOUR CODE HERE TO CHECK IF ANY CELL IS EMPTY WITH THE VALUE 0. IF THERE IS NO EMPTY
-        THEN YOU SHOULD ALSO RETURN THE WINNER OF THE GAME BY CHECKING THE SCORES FOR EACH PLAYER 
+        Terminal only when the board is full.
+        For 4×4 and 5×5 the winner is decided by total triplets.
         """
-        rows = len(self.board_state)
-        cols = len(self.board_state[0])
-        k = self.win_length
-
-        # Check horizontal triplets
-        for r in range(rows):
-            for c in range(cols - 2):
-                s = (
-                    self.board_state[r][c]
-                    + self.board_state[r][c + 1]
-                    + self.board_state[r][c + 2]
-                )
-                if s == k:
-                    self.winner = "AI"
-                    return True
-                elif s == -k:
-                    self.winner = "Human"
-                    return True
-
-        # Check vertical triplets
-        for c in range(cols):
-            for r in range(rows - 2):
-                s = (
-                    self.board_state[r][c]
-                    + self.board_state[r + 1][c]
-                    + self.board_state[r + 2][c]
-                )
-                if s == k:
-                    self.winner = "AI"
-                    return True
-                elif s == -k:
-                    self.winner = "Human"
-                    return True
-
-        # Check diagonal (top-left to bottom-right)
-        for r in range(rows - 2):
-            for c in range(cols - 2):
-                s = (
-                    self.board_state[r][c]
-                    + self.board_state[r + 1][c + 1]
-                    + self.board_state[r + 2][c + 2]
-                )
-                if s == k:
-                    self.winner = "AI"
-                    return True
-                elif s == -k:
-                    self.winner = "Human"
-                    return True
-
-        # Check diagonal (bottom-left to top-right)
-        for r in range(2, rows):
-            for c in range(cols - 2):
-                s = (
-                    self.board_state[r][c]
-                    + self.board_state[r - 1][c + 1]
-                    + self.board_state[r - 2][c + 2]
-                )
-                if s == k:
-                    self.winner = "AI"
-                    return True
-                elif s == -k:
-                    self.winner = "Human"
-                    return True
-
-        # If any empty cell exists, game is not terminal yet on larger boards
-        # The game ends when the board is full.
-        for r in range(rows):
-            for c in range(cols):
-                if self.board_state[r][c] == 0:
-                    return False
-
-        # No empty cells, the game is over.
+        for row in self.board_state:
+            if 0 in row:
+                return False
+        
         score = self.get_scores(terminal=True)
         if score > 0:
             self.winner = "Human"
@@ -107,61 +39,59 @@ class GameStatus:
         YOU SHOULD THEN RETURN THE CALCULATED SCORE WHICH CAN BE POSITIVE (HUMAN PLAYER WINS),
         NEGATIVE (AI PLAYER WINS), OR 0 (DRAW)
         """
-        rows = len(self.board_state)
-        cols = len(self.board_state[0])
-        scores = 0
+        B = self.board_state
+        R, C = len(B), len(B[0])
+        L = getattr(self, "win_length", 3)
 
-        if self.human_symbol == "X":
-            human_player, ai_player = -1, 1
-        else:
-            human_player, ai_player = 1, -1
+        # Human symbol default is X if not set by GUI
+        sym = getattr(self, "human_symbol", "X")
+        human_val = 1 if str(sym).upper() == "O" else -1
+        ai_val = -human_val
 
-        # Helper to evaluate a "window" of 3 cells
-        def evaluate_window(window):
-            score = 0
-            human_pieces = window.count(human_player)
-            ai_pieces = window.count(ai_player)
-            empty_cells = window.count(0)
+        def count_line(seq):
+            h = a = 0
+            for i in range(len(seq) - L + 1):
+                w = seq[i:i+L]
+                if all(v == human_val for v in w):
+                    h += 1
+                elif all(v == ai_val for v in w):
+                    a += 1
+            return h, a
 
-            if human_pieces == 3:
-                score += 1000  # Human wins (large magnitude to prioritize immediate wins)
-            elif ai_pieces == 3:
-                score -= 1000  # AI wins (large magnitude to prioritize immediate wins)
-            elif human_pieces == 2 and empty_cells == 1:
-                score += 10  # Human has a threat
-            elif ai_pieces == 2 and empty_cells == 1:
-                score -= 10  # AI has a threat
-            elif human_pieces == 1 and empty_cells == 2:
-                score += 1 # Human has a potential
-            elif ai_pieces == 1 and empty_cells == 2:
-                score -= 1 # AI has a potential
-            return score
+        human = ai = 0
 
-        # Horizontal check
-        for r in range(rows):
-            for c in range(cols - 2):
-                window = [self.board_state[r][c], self.board_state[r][c+1], self.board_state[r][c+2]]
-                scores += evaluate_window(window)
+        # rows
+        for r in range(R):
+            h, a = count_line(B[r])
+            human += h; ai += a
 
-        # Vertical check
-        for c in range(cols):
-            for r in range(rows - 2):
-                window = [self.board_state[r][c], self.board_state[r+1][c], self.board_state[r+2][c]]
-                scores += evaluate_window(window)
+        # cols
+        for c in range(C):
+            col = [B[r][c] for r in range(R)]
+            h, a = count_line(col)
+            human += h; ai += a
 
-        # Diagonal checks (top-left to bottom-right)
-        for r in range(rows - 2):
-            for c in range(cols - 2):
-                window = [self.board_state[r][c], self.board_state[r+1][c+1], self.board_state[r+2][c+2]]
-                scores += evaluate_window(window)
+        # diag down-right
+        for r in range(R - L + 1):
+            for c in range(C - L + 1):
+                diag = [B[r+k][c+k] for k in range(L)]
+                h, a = count_line(diag)
+                human += h; ai += a
 
-        # Diagonal checks (bottom-left to top-right)
-        for r in range(2, rows):
-            for c in range(cols - 2):
-                window = [self.board_state[r][c], self.board_state[r-1][c+1], self.board_state[r-2][c+2]]
-                scores += evaluate_window(window)
-        
-        return scores
+        # diag down-left
+        for r in range(R - L + 1):
+            for c in range(L - 1, C):
+                diag = [B[r+k][c-k] for k in range(L)]
+                h, a = count_line(diag)
+                human += h; ai += a
+
+        score = human - ai
+
+        # When terminal, make any nonzero result dominant to guide search
+        if terminal and score != 0:
+            return 1000 if score > 0 else -1000
+        return score
+    
 
     def get_negamax_scores(self, terminal):
         """
@@ -174,17 +104,14 @@ class GameStatus:
         return self.get_scores(terminal)
 
     def get_moves(self):
+        """
+        Returns list of all empty cells (value 0) as (row, col) tuples.
+        Used by minimax/negamax to find valid moves.
+        """
         moves = []
-        """
-        YOUR CODE HERE TO ADD ALL THE NON EMPTY CELLS TO MOVES VARIABLES AND RETURN IT TO BE USE BY YOUR
-        MINIMAX OR NEGAMAX FUNCTIONS
-        """
-        rows = len(self.board_state)
-        cols = len(self.board_state[0])
-
-        for r in range(rows):
-            for c in range(cols):
-                if self.board_state[r][c] == 0:
+        for r, row in enumerate(self.board_state):
+            for c, v in enumerate(row):
+                if v == 0:
                     moves.append((r, c))
         return moves
 

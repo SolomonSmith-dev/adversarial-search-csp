@@ -1,6 +1,9 @@
 """
 Test suite for Minimax and Negamax algorithms
 Tests various game scenarios to ensure AI makes optimal moves
+
+NOTE: Per assignment requirements, games only end when the board is COMPLETELY FULL.
+Winner is determined by total triplet count, not by first triplet formed.
 """
 
 import numpy as np
@@ -18,12 +21,12 @@ def print_board(board_state):
 
 
 def test_blocking_move():
-    """Test that AI blocks opponent's winning move."""
+    """Test that AI prevents opponent from forming triplets."""
     print("=" * 60)
-    print("TEST 1: AI should block opponent's winning move")
+    print("TEST 1: AI should block opponent's triplet formation")
     print("=" * 60)
     
-    # Setup: Human (X) has two in a row, AI (O) must block
+    # Setup: Human (X) has two in a row, AI (O) should block to prevent triplet
     # X X .
     # . . .
     # . . .
@@ -35,35 +38,43 @@ def test_blocking_move():
     
     game_state = GameStatus(board, turn_O=True, human_symbol="X")
     print_board(board)
+    print(f"Current score (from human perspective): {game_state.get_scores(False)}")
     
-    # AI should block at (0, 2)
-    score, move = minimax(game_state, depth=4, maximizing_player=False)
+    # AI should block at (0, 2) to prevent human from forming a triplet
+    score, move = minimax(game_state, depth=4, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
+    # Blocking at (0, 2) is smart to prevent triplet
     if move == (0, 2):
-        print("✅ PASS: Minimax correctly blocked the winning move")
+        print("✅ PASS: Minimax correctly blocked the triplet formation")
+        minimax_pass = True
     else:
-        print(f"❌ FAIL: Minimax chose {move} instead of blocking at (0, 2)")
+        print(f"⚠️  WARNING: Minimax chose {move} instead of blocking at (0, 2)")
+        print(f"   (This may still be valid depending on algorithm depth/strategy)")
+        minimax_pass = False
     
     # Test negamax too
     score_neg, move_neg = negamax(game_state, depth=4, turn_multiplier=-1)
     print(f"Negamax chose move: {move_neg}, score: {score_neg}")
     
     if move_neg == (0, 2):
-        print("✅ PASS: Negamax correctly blocked the winning move")
+        print("✅ PASS: Negamax correctly blocked the triplet formation")
+        negamax_pass = True
     else:
-        print(f"❌ FAIL: Negamax chose {move_neg} instead of blocking at (0, 2)")
+        print(f"⚠️  WARNING: Negamax chose {move_neg} instead of blocking at (0, 2)")
+        print(f"   (This may still be valid depending on algorithm depth/strategy)")
+        negamax_pass = False
     
-    return move == (0, 2) and move_neg == (0, 2)
+    return minimax_pass and negamax_pass
 
 
 def test_winning_move():
-    """Test that AI takes a winning move when available."""
+    """Test that AI forms triplets when possible."""
     print("\n" + "=" * 60)
-    print("TEST 2: AI should take winning move")
+    print("TEST 2: AI should form its own triplets")
     print("=" * 60)
     
-    # Setup: AI (O) has two in a row and can win
+    # Setup: AI (O) has two in a row and can form a triplet
     # O O .
     # X . .
     # X . .
@@ -75,25 +86,30 @@ def test_winning_move():
     
     game_state = GameStatus(board, turn_O=True, human_symbol="X")
     print_board(board)
+    print(f"Current score (from human perspective): {game_state.get_scores(False)}")
     
-    # AI should win at (0, 2)
-    score, move = minimax(game_state, depth=4, maximizing_player=False)
+    # AI should complete triplet at (0, 2)
+    score, move = minimax(game_state, depth=4, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
     if move == (0, 2):
-        print("✅ PASS: Minimax correctly took the winning move")
+        print("✅ PASS: Minimax correctly formed a triplet")
+        minimax_pass = True
     else:
-        print(f"❌ FAIL: Minimax chose {move} instead of winning at (0, 2)")
+        print(f"⚠️  WARNING: Minimax chose {move} instead of forming triplet at (0, 2)")
+        minimax_pass = False
     
     score_neg, move_neg = negamax(game_state, depth=4, turn_multiplier=-1)
     print(f"Negamax chose move: {move_neg}, score: {score_neg}")
     
     if move_neg == (0, 2):
-        print("✅ PASS: Negamax correctly took the winning move")
+        print("✅ PASS: Negamax correctly formed a triplet")
+        negamax_pass = True
     else:
-        print(f"❌ FAIL: Negamax chose {move_neg} instead of winning at (0, 2)")
+        print(f"⚠️  WARNING: Negamax chose {move_neg} instead of forming triplet at (0, 2)")
+        negamax_pass = False
     
-    return move == (0, 2) and move_neg == (0, 2)
+    return minimax_pass and negamax_pass
 
 
 def test_fork_opportunity():
@@ -116,7 +132,7 @@ def test_fork_opportunity():
     print_board(board)
     
     # AI should block the fork (best moves would be corners or center)
-    score, move = minimax(game_state, depth=4, maximizing_player=False)
+    score, move = minimax(game_state, depth=4, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
     # Valid blocking moves: (0, 2), (2, 0), (2, 2)
@@ -140,7 +156,7 @@ def test_center_preference():
     game_state = GameStatus(board, turn_O=True, human_symbol="X")
     print_board(board)
     
-    score, move = minimax(game_state, depth=4, maximizing_player=False)
+    score, move = minimax(game_state, depth=4, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
     # Center (1,1) and corners are equally good strategically
@@ -174,7 +190,7 @@ def test_human_as_O():
     print("Human is O, AI is X (turn_O=False means X's turn)")
     
     # AI (playing as X) should block at (0, 2)
-    score, move = minimax(game_state, depth=4, maximizing_player=False)
+    score, move = minimax(game_state, depth=4, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
     if move == (0, 2):
@@ -186,12 +202,12 @@ def test_human_as_O():
 
 
 def test_terminal_state_detection():
-    """Test that algorithms correctly identify terminal states."""
+    """Test that algorithms correctly identify terminal states (full board only)."""
     print("\n" + "=" * 60)
-    print("TEST 6: Terminal state detection")
+    print("TEST 6: Terminal state detection (board must be full)")
     print("=" * 60)
     
-    # Setup: Human (X) has already won
+    # Setup: Board with triplet but NOT full - should NOT be terminal
     # X X X
     # O O .
     # . . .
@@ -205,17 +221,18 @@ def test_terminal_state_detection():
     print_board(board)
     
     is_terminal = game_state.is_terminal()
-    score = game_state.get_scores(terminal=True)
+    score = game_state.get_scores(terminal=False)
     
     print(f"Is terminal: {is_terminal}")
-    print(f"Score: {score}")
+    print(f"Score (non-terminal): {score}")
+    print(f"Note: Board has XXX triplet but is NOT full, so NOT terminal per assignment rules")
     
-    if is_terminal and score > 0:
-        print("✅ PASS: Correctly detected human win (positive score)")
+    if not is_terminal:
+        print("✅ PASS: Correctly identified non-full board as non-terminal")
+        return True
     else:
-        print(f"❌ FAIL: Terminal={is_terminal}, Score={score}")
-    
-    return is_terminal and score > 0
+        print(f"❌ FAIL: Board is not full, should not be terminal")
+        return False
 
 
 def test_draw_detection():
@@ -274,7 +291,7 @@ def test_4x4_board():
     print_board(board)
     
     # AI should block at (0, 2)
-    score, move = minimax(game_state, depth=3, maximizing_player=False)
+    score, move = minimax(game_state, depth=3, maximizingPlayer=False)
     print(f"Minimax chose move: {move}, score: {score}")
     
     if move == (0, 2):
@@ -305,7 +322,7 @@ def test_alpha_beta_pruning():
     # Run multiple times to ensure consistency with randomization
     moves = []
     for i in range(5):
-        score, move = minimax(game_state, depth=4, maximizing_player=False)
+        score, move = minimax(game_state, depth=4, maximizingPlayer=False)
         moves.append(move)
     
     print(f"Moves from 5 runs: {moves}")

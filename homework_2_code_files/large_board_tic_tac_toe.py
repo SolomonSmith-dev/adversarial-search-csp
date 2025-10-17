@@ -332,7 +332,10 @@ class RandomBoardTicTacToe:
                             self.update_pieces()
                             pygame.display.update()
 
-                            if self.is_game_over():
+                            # Check if game is over after player move
+                            terminal = self.game_state.is_terminal()
+                            if terminal:
+                                score = self.game_state.get_scores(terminal)
                                 self.game_ended = True
                                 self.update_persistent_score()
                                 winner_text, color = self.get_winner_display()
@@ -353,7 +356,10 @@ class RandomBoardTicTacToe:
                                     pygame.time.wait(500) # Add a small delay for realism
                                     self.play_ai()
                                     
-                                    if self.is_game_over():
+                                    # Check if game is over after AI move
+                                    terminal = self.game_state.is_terminal()
+                                    if terminal:
+                                        score = self.game_state.get_scores(terminal)
                                         self.game_ended = True
                                         self.update_persistent_score()
                                         winner_text, color = self.get_winner_display()
