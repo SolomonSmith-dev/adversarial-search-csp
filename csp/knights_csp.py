@@ -1,14 +1,6 @@
 """
-CSP: Place k knights on an n x n chessboard so that no two attack each other.
-
-Formulation
-- Variables: K1..Kk (one for each knight)
-- Domain: all board positions (i, j) with 0 <= i, j < n
-- Constraints:
-  - All-different: no two knights on the same square
-  - Non-attacking: no pair (Ki, Kj) are in a knight-move relation
-
-Includes a simple backtracking solver and a demo in __main__.
+Place k knights on an n x n chessboard so none attack each other.
+Uses backtracking to find a solution.
 """
 from __future__ import annotations
 from typing import List, Tuple, Dict, Optional, Set
@@ -23,7 +15,7 @@ def knight_attacks(a: Position, b: Position) -> bool:
 
 
 def backtrack_knights(n: int, k: int) -> Optional[List[Position]]:
-    """Simple backtracking to place k knights on n x n without conflicts."""
+    # Backtracking to place k knights on n x n without conflicts
     solution: List[Position] = []
     used: Set[Position] = set()
 

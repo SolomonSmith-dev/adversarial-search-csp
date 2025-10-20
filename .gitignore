@@ -1,6 +1,18 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# OS
 .DS_Store
+
+# IDEs
 .vscode/
 .idea/
+
+# Submission artifacts
+submission/
+*.zip

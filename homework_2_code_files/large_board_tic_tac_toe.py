@@ -1,7 +1,3 @@
-"""
-Tic Tac Toe GUI with persistent board drawing and corrected cross/circle rendering.
-"""
-
 import pygame
 import numpy as np
 from GameStatus_5120 import GameStatus
@@ -42,20 +38,20 @@ class RandomBoardTicTacToe:
     def __init__(self, size=(screen_width, screen_height + HEADER_SIZE)):
 
         self.size = self.width, self.height = size
-        # Define a modern, professional color palette (Modern Dark)
-        self.DARK_BG = (34, 40, 49)       # Dark charcoal
-        self.BOARD_BG = (57, 62, 70)      # Medium gray
-        self.LINE_COLOR = (78, 86, 98)    # Lighter gray for lines
-        self.WHITE = (238, 238, 238)      # Off-white for text
-        self.SUCCESS_GREEN = (85, 173, 85) # Muted green
-        self.ERROR_RED = (217, 83, 79)    # Muted red
-        self.WARNING_ORANGE = (240, 173, 78) # Muted orange
-        self.ACCENT_BLUE = (52, 152, 219) # Bright blue for highlights
+        # Simple colors
+        self.DARK_BG = (30, 30, 30)
+        self.BOARD_BG = (60, 60, 60)
+        self.LINE_COLOR = (120, 120, 120)
+        self.WHITE = (240, 240, 240)
+        self.SUCCESS_GREEN = (0, 180, 0)
+        self.ERROR_RED = (200, 40, 40)
+        self.WARNING_ORANGE = (240, 180, 0)
 
         # Grid Size
         self.GRID_SIZE = 3
         self.OFFSET = 5
-        self.HEADER_SIZE = 240
+        # Use the global header size so window size and layout match
+        self.HEADER_SIZE = HEADER_SIZE
         self.MARGIN = 8
         self.CIRCLE_COLOR = (70, 171, 219) # A slightly different blue for O
         self.CROSS_COLOR = (217, 83, 79)   # Muted red for X
@@ -68,9 +64,9 @@ class RandomBoardTicTacToe:
         self.ai_wins = 0
         self.draws = 0
 
-        # Modern button styling
+        # Simple button styling
         button_color = (50, 55, 65)
-        button_hover = self.ACCENT_BLUE
+        button_hover = (80, 120, 200)
         button_text = self.WHITE
 
         self.buttons = [
@@ -89,7 +85,7 @@ class RandomBoardTicTacToe:
         self.screen = pygame.display.set_mode(self.size)
 
     def draw_board(self):
-        pygame.display.set_caption("Tic Tac Toe - AI Challenge")
+        pygame.display.set_caption("Tic Tac Toe")
         self.screen.fill(self.DARK_BG)
         
         pygame.draw.rect(self.screen, self.BOARD_BG, (0, 0, self.width, self.HEADER_SIZE))
@@ -114,21 +110,16 @@ class RandomBoardTicTacToe:
         pygame.display.update()
     
     def draw_scoreboard(self):
-        scoreboard_y = 130
-        
-        score_bg = pygame.Rect(10, scoreboard_y, self.width - 20, 60)
-        pygame.draw.rect(self.screen, self.LINE_COLOR, score_bg, border_radius=12)
-        pygame.draw.rect(self.screen, self.BOARD_BG, score_bg.inflate(-4, -4), border_radius=10)
-        
-        title_font = pygame.font.SysFont('Arial', 22, bold=True)
-        title_text = title_font.render("SCOREBOARD", True, self.ACCENT_BLUE)
-        title_rect = title_text.get_rect(center=(self.width // 2, scoreboard_y + 20))
-        self.screen.blit(title_text, title_rect)
-        
-        score_font = pygame.font.SysFont('Arial', 26, bold=True)
-        scores_text = f"Human: {self.human_wins}    |    AI: {self.ai_wins}    |    Draws: {self.draws}"
+        scoreboard_y = 140
+        # Clear an area below the buttons so numbers never overlap visually
+        clear_rect = pygame.Rect(0, 120, self.width, 80)
+        pygame.draw.rect(self.screen, self.BOARD_BG, clear_rect)
+
+        scoreboard_y = 160
+        score_font = pygame.font.SysFont('Arial', 24, bold=False)
+        scores_text = f"Human: {self.human_wins} | AI: {self.ai_wins} | Draws: {self.draws}"
         scores_surface = score_font.render(scores_text, True, self.WHITE)
-        scores_rect = scores_surface.get_rect(center=(self.width // 2, scoreboard_y + 45))
+        scores_rect = scores_surface.get_rect(center=(self.width // 2, scoreboard_y))
         self.screen.blit(scores_surface, scores_rect)
 
     def toggle_symbol_button(self):
@@ -158,7 +149,6 @@ class RandomBoardTicTacToe:
         
         current_index = options.index(self.GRID_SIZE)
         self.GRID_SIZE = options[(current_index + 1) % len(options)]
-        GameStatus.win_length = 3 # Keep win condition as 3-in-a-row
         
         self.game_ended = False
         board = np.zeros((self.GRID_SIZE, self.GRID_SIZE), dtype=int)
@@ -221,93 +211,7 @@ class RandomBoardTicTacToe:
         pygame.draw.polygon(self.screen, self.CROSS_COLOR, points1)
         pygame.draw.polygon(self.screen, self.CROSS_COLOR, points2)
 
-    def find_all_triplets(self):
-        """Scan the current board and return all length-3 triplets.
-
-        Returns a list of tuples: (ttype, start_row, start_col, value)
-        where ttype is one of 'horizontal', 'vertical', 'diagonal_dr', 'diagonal_dl'
-        and value is 1 (O) or -1 (X).
-        """
-        B = self.game_state.board_state
-        R = self.GRID_SIZE
-        C = self.GRID_SIZE
-        L = 3
-        triplets = []
-
-        # horizontal
-        for r in range(R):
-            for c in range(C - L + 1):
-                vals = [B[r][c + k] for k in range(L)]
-                if vals[0] != 0 and all(v == vals[0] for v in vals):
-                    triplets.append(('horizontal', r, c, vals[0]))
-
-        # vertical
-        for c in range(C):
-            for r in range(R - L + 1):
-                vals = [B[r + k][c] for k in range(L)]
-                if vals[0] != 0 and all(v == vals[0] for v in vals):
-                    triplets.append(('vertical', r, c, vals[0]))
-
-        # diagonal down-right
-        for r in range(R - L + 1):
-            for c in range(C - L + 1):
-                vals = [B[r + k][c + k] for k in range(L)]
-                if vals[0] != 0 and all(v == vals[0] for v in vals):
-                    triplets.append(('diagonal_dr', r, c, vals[0]))
-
-        # diagonal down-left
-        for r in range(R - L + 1):
-            for c in range(L - 1, C):
-                vals = [B[r + k][c - k] for k in range(L)]
-                if vals[0] != 0 and all(v == vals[0] for v in vals):
-                    triplets.append(('diagonal_dl', r, c, vals[0]))
-
-        return triplets
-
-    def draw_win_highlight(self):
-        """Draw a semi-transparent highlight over winning triplet(s) for 3x3 games."""
-        # Only apply for 3x3
-        if self.GRID_SIZE != 3:
-            return
-        triplets = self.find_all_triplets()
-        if not triplets:
-            return
-        # Use accent color with transparency
-        highlight_color = (*self.ACCENT_BLUE, 120) if len(self.ACCENT_BLUE) == 3 else self.ACCENT_BLUE
-        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        for t in triplets:
-            ttype, r, c, val = t
-            # compute rectangle covering the triplet
-            if ttype == 'horizontal':
-                x1 = c * (self.WIDTH + self.MARGIN) + self.MARGIN
-                y1 = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN
-                w = self.WIDTH * 3 + self.MARGIN * 2
-                h = self.HEIGHT
-                rect = pygame.Rect(int(x1), int(y1), int(w), int(h))
-            elif ttype == 'vertical':
-                x1 = c * (self.WIDTH + self.MARGIN) + self.MARGIN
-                y1 = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN
-                w = self.WIDTH
-                h = self.HEIGHT * 3 + self.MARGIN * 2
-                rect = pygame.Rect(int(x1), int(y1), int(w), int(h))
-            elif ttype == 'diagonal_dr':
-                # Draw a thick diagonal rectangle by drawing a rotated polygon
-                start_x = c * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
-                start_y = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
-                end_x = (c + 2) * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
-                end_y = self.HEADER_SIZE + (r + 2) * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
-                pygame.draw.line(s, (*self.ACCENT_BLUE, 140), (int(start_x), int(start_y)), (int(end_x), int(end_y)), 20)
-                continue
-            else:  # diagonal_dl
-                start_x = c * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
-                start_y = self.HEADER_SIZE + r * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
-                end_x = (c - 2) * (self.WIDTH + self.MARGIN) + self.MARGIN + self.WIDTH / 2
-                end_y = self.HEADER_SIZE + (r + 2) * (self.HEIGHT + self.MARGIN) + self.MARGIN + self.HEIGHT / 2
-                pygame.draw.line(s, (*self.ACCENT_BLUE, 140), (int(start_x), int(start_y)), (int(end_x), int(end_y)), 20)
-                continue
-            # fill semi-transparent rectangle
-            pygame.draw.rect(s, (*self.ACCENT_BLUE, 80), rect, border_radius=8)
-        self.screen.blit(s, (0, 0))
+    # Removed win highlighting and triplet scanning to keep code simple
 
     def change_turn(self):
         if self.game_state.turn_O:
@@ -426,18 +330,13 @@ class RandomBoardTicTacToe:
                                 score = self.game_state.get_scores(terminal)
                                 self.game_ended = True
                                 self.update_persistent_score()
-                                # Highlight winning triplet(s) immediately for 3x3
-                                self.draw_win_highlight()
                                 winner_text, color = self.get_winner_display()
                                 self.draw_scoreboard()
                                 
-                                font = pygame.font.SysFont('Arial', 52, bold=True)
+                                font = pygame.font.SysFont('Arial', 36, bold=True)
                                 text = font.render(winner_text, True, color)
-                                text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE / 2 + 20))
-                                
-                                # Add a subtle shadow effect
-                                shadow = font.render(winner_text, True, (0,0,0,50))
-                                self.screen.blit(shadow, text_rect.move(2,2))
+                                # Place winner text near bottom of header to avoid overlapping scoreboard
+                                text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE - 30))
                                 self.screen.blit(text, text_rect)
                                 
                                 pygame.display.update()
@@ -452,17 +351,13 @@ class RandomBoardTicTacToe:
                                         score = self.game_state.get_scores(terminal)
                                         self.game_ended = True
                                         self.update_persistent_score()
-                                        # Highlight winning triplet(s) immediately for 3x3
-                                        self.draw_win_highlight()
                                         winner_text, color = self.get_winner_display()
                                         self.draw_scoreboard()
                                         
-                                        font = pygame.font.SysFont('Arial', 52, bold=True)
+                                        font = pygame.font.SysFont('Arial', 36, bold=True)
                                         text = font.render(winner_text, True, color)
-                                        text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE / 2 + 20))
-                                        
-                                        shadow = font.render(winner_text, True, (0,0,0,50))
-                                        self.screen.blit(shadow, text_rect.move(2,2))
+                                        # Place winner text near bottom of header to avoid overlapping scoreboard
+                                        text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE - 30))
                                         self.screen.blit(text, text_rect)
                                         
                                         pygame.display.update()
