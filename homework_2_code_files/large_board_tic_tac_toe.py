@@ -261,9 +261,7 @@ class RandomBoardTicTacToe:
         if use_minimax:
             _, best_move = minimax(self.game_state, depth=4, maximizing_player=False)
         else:
-            # For negamax, turn_multiplier is -1 for AI, 1 for human
-            turn_multiplier = 1 if self.game_state.turn_O == (self.player_symbol == "O") else -1
-            _, best_move = negamax(self.game_state, depth=4, turn_multiplier=turn_multiplier)
+            _, best_move = negamax(self.game_state, depth=4)
 
         if best_move is not None:
             print(f"AI chose move: {best_move}")

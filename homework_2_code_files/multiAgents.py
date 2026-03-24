@@ -73,11 +73,8 @@ def minimax(game_state, depth, maximizing_player, alpha=float('-inf'), beta=floa
             new_state = game_state.get_new_state(move)
             if new_state.is_terminal():
                 evaluation = new_state.get_scores(True)
-                if evaluation < minEval:
-                    minEval = evaluation
-                    best_moves = [move]
                 if evaluation < 0:
-                    return minEval, move
+                    return evaluation, move
             else:
                 evaluation = minimax(new_state, depth - 1, True, alpha, beta)[0]
             if evaluation < minEval:
@@ -92,7 +89,7 @@ def minimax(game_state, depth, maximizing_player, alpha=float('-inf'), beta=floa
         best_move = choose_tiebreak(game_state, best_moves)
         return minEval, best_move
 
-def negamax(game_status, depth, turn_multiplier, alpha=float('-inf'), beta=float('inf')):
+def negamax(game_status, depth, alpha=float('-inf'), beta=float('inf')):
     # Negamax with alpha-beta pruning
     terminal = game_status.is_terminal()
     if depth == 0 or terminal:
@@ -113,7 +110,7 @@ def negamax(game_status, depth, turn_multiplier, alpha=float('-inf'), beta=float
             if evaluation > 0:
                 return maxEval, move
         else:
-            evaluation = -negamax(new_state, depth - 1, -turn_multiplier, -beta, -alpha)[0]
+            evaluation = -negamax(new_state, depth - 1, -beta, -alpha)[0]
         if evaluation > maxEval:
             maxEval = evaluation
             best_moves = [move]

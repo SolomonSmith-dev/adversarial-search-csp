@@ -17,6 +17,11 @@ class GameStatus:
         C = len(self.board_state[0])
         return R, C
 
+    def _human_val(self):
+        """Return the board encoding for the human player (+1 for O, -1 for X)."""
+        sym = getattr(self, "human_symbol", "X")
+        return 1 if str(sym).upper() == "O" else -1
+
     def _sequences(self, L=None):
         # Yield all sequences of length L (row, col, diag)
         if L is None:
@@ -90,25 +95,24 @@ class GameStatus:
     # -------------------------------------------------------------------
 
     def is_terminal(self):
-        # Only terminal if board is full (assignment rule)
+        human_val = self._human_val()
+        # Check for a win mid-game
+        for seq, _ in self._sequences():
+            if seq[0] != 0 and all(v == seq[0] for v in seq[1:]):
+                self.winner = "Human" if seq[0] == human_val else "AI"
+                return True
+        # Check if board is full
         for row in self.board_state:
             if 0 in row:
                 return False
-        # Board is full, check winner
-        score = self.get_scores(terminal=True)
-        if score > 0:
-            self.winner = "Human"
-        elif score < 0:
-            self.winner = "AI"
-        else:
-            self.winner = "DRAW"
+        # Board is full with no winner: draw
+        self.winner = "DRAW"
         return True
 
     def get_scores(self, terminal):
         # Count triplets for human and AI
         L = self.win_length
-        sym = getattr(self, "human_symbol", "X")
-        human_val = 1 if str(sym).upper() == "O" else -1
+        human_val = self._human_val()
         ai_val = -human_val
         human = 0
         ai = 0
