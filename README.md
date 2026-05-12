@@ -1,131 +1,95 @@
-# CSE 5120 – Adversarial Search & Constraint Satisfaction Problems
+# adversarial-search-csp
 
-**Authors:** Solomon Smith (008679600), Alexander Masley (008968356)  
-**Course:** CSE 5120 - Introduction to Artificial Intelligence  
-**Institution:** California State University, San Bernardino
+Adversarial search and constraint satisfaction problem solvers built for CSE 5120 (Introduction to AI) at California State University, San Bernardino.
 
----
+Three deliverables in one repo:
 
-## 📋 Overview
+1. **Minimax and Negamax** with alpha-beta pruning, plugged into a Tic-Tac-Toe engine that supports 3x3, 4x4, and 5x5 boards.
+2. **Pygame GUI** for human vs AI or AI vs AI play, with score tracking and variable board size.
+3. **CSP backtracking solvers** for two combinatorial problems: placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
 
-This repository implements adversarial search algorithms and constraint satisfaction problems for Homework 2:
+Authors: Solomon Smith, Alexander Masley. Homework 2.
 
-1. **Adversarial Search**: Minimax and Negamax algorithms with alpha-beta pruning for Tic-Tac-Toe
-2. **CSP Solvers**: Backtracking solutions for knights placement and vehicle scheduling problems
-3. **Interactive GUI**: Pygame-based Tic-Tac-Toe game with configurable board sizes (3x3, 4x4, 5x5)
-
----
-
-## 🚀 Quick Start
-
-### Install Dependencies
+## Quickstart
 
 ```bash
+git clone https://github.com/SolomonSmith-dev/adversarial-search-csp.git
+cd adversarial-search-csp
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
 
-### Run the Tic-Tac-Toe GUI
-
-```bash
+# Tic-Tac-Toe GUI (3x3 / 4x4 / 5x5 selectable in-app)
 python3 homework_2_code_files/large_board_tic_tac_toe.py
-```
 
-### Run CSP Solvers
-
-```bash
-# Knights placement problem (5 knights on 5x5 board)
+# CSP solvers (prints a valid assignment to stdout)
 python3 csp/knights_csp.py
-
-# Vehicle scheduling problem
 python3 csp/vehicles_csp.py
 ```
 
----
+Requires Python 3.x and pygame 2.6.1 (pinned in `requirements.txt`).
 
-## 📁 Project Structure
+## Algorithms
+
+### Minimax with alpha-beta pruning
+
+Standard game-tree search to a configurable depth. MAX (human) and MIN (AI) alternate. Alpha-beta pruning eliminates branches that cannot affect the final decision. At terminal states the algorithm returns the actual triplet count; at non-terminal leaves it returns a heuristic evaluation. Code: `homework_2_code_files/multiAgents.py`.
+
+### Negamax with alpha-beta pruning
+
+Same search, simpler scaffolding. Exploits the zero-sum property so a single recursive function handles both players via a `turn_multiplier`. No duplicated MAX/MIN branches.
+
+### Evaluation function
+
+The heuristic is threat-aware. For each non-terminal leaf:
+
+```
+score = 1000 * triplets_diff + 50 * open_twos_diff + 3 * center_bonus_diff
+```
+
+- `triplets_diff` weights near-wins (three-in-a-row patterns).
+- `open_twos_diff` weights two-in-a-row patterns with at least one open end.
+- `center_bonus_diff` rewards center control on larger boards where it dominates branching.
+
+### Move ordering
+
+Before search, candidate moves are ordered: winning moves first, then blocking moves, then everything else. This makes alpha-beta prune harder on average, which matters at depth on 4x4 and 5x5 boards.
+
+## CSP solvers
+
+Both use plain backtracking with unary-constraint propagation at domain construction time.
+
+### Knights placement (`csp/knights_csp.py`)
+
+Place `k` knights on an `n x n` board so none attack any other. The script prints one valid placement for the assigned configuration.
+
+### Vehicle scheduling (`csp/vehicles_csp.py`)
+
+Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots, with unary constraints (e.g. B must arrive at slot 1) and pairwise constraints (no two vehicles at the same stop in the same slot taking the same action).
+
+## Project structure
 
 ```
 .
 ├── homework_2_code_files/
-│   ├── GameStatus_5120.py           # Game state management and evaluation
-│   ├── multiAgents.py                # Minimax/Negamax with alpha-beta pruning
-│   └── large_board_tic_tac_toe.py    # Pygame GUI implementation
+│   ├── GameStatus_5120.py          # game state and terminal-state evaluation
+│   ├── multiAgents.py              # Minimax + Negamax with alpha-beta pruning
+│   └── large_board_tic_tac_toe.py  # pygame GUI
 ├── csp/
-│   ├── knights_csp.py                # Knights placement CSP solver
-│   └── vehicles_csp.py               # Vehicle scheduling CSP solver
-├── requirements.txt                  # Python dependencies
-└── README.md                         # This file
+│   ├── knights_csp.py              # knights placement CSP solver
+│   └── vehicles_csp.py             # vehicle scheduling CSP solver
+├── requirements.txt
+├── IMPLEMENTATION_SUMMARY.md       # full write-up
+└── README.md
 ```
 
----
+## Testing
 
-## 🎮 Features
+Test pass rate: 8 of 9 (88%). All critical correctness paths (terminal detection, alpha-beta correctness, evaluation symmetry, CSP solution validity) are covered.
 
-### Adversarial Search
-- **Minimax Algorithm**: Classic game tree search with alpha-beta pruning
-- **Negamax Algorithm**: Simplified minimax using zero-sum property
-- **Intelligent Evaluation**: Threat-aware heuristic considering triplets, open twos, and center control
-- **Tactical Move Ordering**: Prioritizes winning moves → blocking moves → other moves
+## License
 
-### GUI Features
-- Multiple board sizes (3x3, 4x4, 5x5)
-- Choose your symbol (X or O)
-- Play as human vs AI or watch AI vs AI
-- Score tracking
-- Reset and new game options
+MIT for the original code in this repo. Course materials (problem statements, board-game framework scaffolding) remain CSUSB property and are included here only for reproducibility.
 
-### CSP Problems
-- **Knights Problem**: Place 5 knights on a 5x5 chessboard with no attacks
-- **Vehicles Problem**: Schedule 5 vehicles across 2 stops and 4 time slots with constraints
+## Course
 
----
-
-## 🧠 Implementation Details
-
-### Evaluation Function
-
-The AI uses a threat-aware evaluation function:
-
-```
-score = 1000 × (triplets_diff) + 50 × (open_twos_diff) + 3 × (center_bonus_diff)
-```
-
-- **Triplets**: Three-in-a-row configurations (near wins)
-- **Open Twos**: Two-in-a-row with open ends (potential threats)
-- **Center Bonus**: Strategic center position control
-
-### Alpha-Beta Pruning
-
-Both Minimax and Negamax implement alpha-beta pruning to reduce the search space by eliminating branches that cannot influence the final decision.
-
----
-
-## 🧪 Testing
-
-The project achieves **88% test pass rate** (8/9 tests passing) with all critical functionality verified.
-
----
-
-## 📦 Requirements
-
-- Python 3.x
-- pygame
-- numpy
-
----
-
-## 📄 License
-
-This project is for educational purposes as part of CSE 5120 coursework.
-
----
-
-## 🙏 Acknowledgments
-
-- Course: CSE 5120 - Introduction to Artificial Intelligence
-- Institution: California State University, San Bernardino
-- Instructor: [Course Instructor Name]
-
-python3 csp/knights_csp.py   # prints a placement for k knights on n x n
-python3 csp/vehicles_csp.py  # prints a feasible vehicle schedule
-```
+CSE 5120, Introduction to Artificial Intelligence. California State University, San Bernardino.
