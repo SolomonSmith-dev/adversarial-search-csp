@@ -1,5 +1,9 @@
 # adversarial-search-csp
 
+[![tests](https://github.com/SolomonSmith-dev/adversarial-search-csp/actions/workflows/test.yml/badge.svg)](https://github.com/SolomonSmith-dev/adversarial-search-csp/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+
 Adversarial search and constraint satisfaction problem solvers built for CSE 5120 (Introduction to AI) at California State University, San Bernardino.
 
 Three deliverables in one repo:
@@ -8,7 +12,7 @@ Three deliverables in one repo:
 2. **Pygame GUI** for human vs AI or AI vs AI play, with score tracking and variable board size.
 3. **CSP backtracking solvers** for two combinatorial problems: placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
 
-Authors: Solomon Smith, Alexander Masley. Homework 2.
+Authors: Solomon Smith and Alexander Masley.
 
 ## Quickstart
 
