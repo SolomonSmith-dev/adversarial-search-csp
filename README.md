@@ -83,7 +83,12 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 
 ## Testing
 
-Test pass rate: 8 of 9 (88%). All critical correctness paths (terminal detection, alpha-beta correctness, evaluation symmetry, CSP solution validity) are covered.
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
+
+21 tests across the `GameStatus` class, the minimax and negamax algorithms, and both CSP solvers. CI runs the suite on every push and pull request.
 
 ## License
 
