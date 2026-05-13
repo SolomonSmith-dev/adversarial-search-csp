@@ -1,4 +1,4 @@
-from GameStatus_5120 import GameStatus
+from game_status import GameStatus
 import random
 
 

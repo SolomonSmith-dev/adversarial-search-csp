@@ -1,5 +1,5 @@
 """Tests for minimax and negamax."""
-from GameStatus_5120 import GameStatus
+from game_status import GameStatus
 from multiAgents import minimax, negamax, ordered_moves
 
 

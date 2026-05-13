@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 
-Adversarial search and constraint satisfaction problem solvers built for CSE 5120 (Introduction to AI) at California State University, San Bernardino.
+Adversarial search and constraint satisfaction problem solvers in Python.
 
 Three deliverables in one repo:
 
@@ -64,7 +64,7 @@ Both use plain backtracking with unary-constraint propagation at domain construc
 
 ### Knights placement (`csp/knights_csp.py`)
 
-Place `k` knights on an `n x n` board so none attack any other. The script prints one valid placement for the assigned configuration.
+Place `k` knights on an `n x n` board so none attack any other. The script prints one valid placement for the configured `n` and `k`.
 
 ### Vehicle scheduling (`csp/vehicles_csp.py`)
 
@@ -75,7 +75,7 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 ```
 .
 ├── tictactoe/
-│   ├── GameStatus_5120.py          # game state and terminal-state evaluation
+│   ├── game_status.py              # game state and terminal-state evaluation
 │   ├── multiAgents.py              # Minimax + Negamax with alpha-beta pruning
 │   └── large_board_tic_tac_toe.py  # pygame GUI
 ├── csp/
@@ -96,8 +96,4 @@ pytest tests/ -v
 
 ## License
 
-MIT for the original code in this repo. Course materials (problem statements, board-game framework scaffolding) remain CSUSB property and are included here only for reproducibility.
-
-## Course
-
-CSE 5120, Introduction to Artificial Intelligence. California State University, San Bernardino.
+MIT. See [LICENSE](LICENSE).

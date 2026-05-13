@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from GameStatus_5120 import GameStatus
+from game_status import GameStatus
 from multiAgents import minimax, negamax
 import sys, random
 

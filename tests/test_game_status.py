@@ -1,5 +1,5 @@
 """Tests for the GameStatus class."""
-from GameStatus_5120 import GameStatus
+from game_status import GameStatus
 
 
 def empty_board(n=3):
