@@ -19,7 +19,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # Tic-Tac-Toe GUI (3x3 / 4x4 / 5x5 selectable in-app)
-python3 homework_2_code_files/large_board_tic_tac_toe.py
+python3 tictactoe/large_board_tic_tac_toe.py
 
 # CSP solvers (prints a valid assignment to stdout)
 python3 csp/knights_csp.py
@@ -32,7 +32,7 @@ Requires Python 3.x and pygame 2.6.1 (pinned in `requirements.txt`).
 
 ### Minimax with alpha-beta pruning
 
-Standard game-tree search to a configurable depth. MAX (human) and MIN (AI) alternate. Alpha-beta pruning eliminates branches that cannot affect the final decision. At terminal states the algorithm returns the actual triplet count; at non-terminal leaves it returns a heuristic evaluation. Code: `homework_2_code_files/multiAgents.py`.
+Standard game-tree search to a configurable depth. MAX (human) and MIN (AI) alternate. Alpha-beta pruning eliminates branches that cannot affect the final decision. At terminal states the algorithm returns the actual triplet count; at non-terminal leaves it returns a heuristic evaluation. Code: `tictactoe/multiAgents.py`.
 
 ### Negamax with alpha-beta pruning
 
@@ -70,7 +70,7 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 
 ```
 .
-├── homework_2_code_files/
+├── tictactoe/
 │   ├── GameStatus_5120.py          # game state and terminal-state evaluation
 │   ├── multiAgents.py              # Minimax + Negamax with alpha-beta pruning
 │   └── large_board_tic_tac_toe.py  # pygame GUI
@@ -78,7 +78,6 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 │   ├── knights_csp.py              # knights placement CSP solver
 │   └── vehicles_csp.py             # vehicle scheduling CSP solver
 ├── requirements.txt
-├── IMPLEMENTATION_SUMMARY.md       # full write-up
 └── README.md
 ```
 
