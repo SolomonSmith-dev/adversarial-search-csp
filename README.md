@@ -12,7 +12,7 @@ Three deliverables in one repo:
 2. **Pygame GUI** for human vs AI or AI vs AI play, with score tracking and variable board size.
 3. **CSP backtracking solvers** for two combinatorial problems: placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
 
-Authors: Solomon Smith and Alexander Masley.
+Author: Solomon Smith.
 
 ## Quickstart
 
