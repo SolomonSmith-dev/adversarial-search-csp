@@ -25,9 +25,16 @@ pip install -r requirements.txt
 # Tic-Tac-Toe GUI (3x3 / 4x4 / 5x5 selectable in-app)
 python3 tictactoe/large_board_tic_tac_toe.py
 
+# Tic-Tac-Toe in the terminal (no display required)
+python3 tictactoe/play_cli.py                  # human (X) vs AI on 3x3
+python3 tictactoe/play_cli.py --mode ai_vs_ai  # watch two perfect AIs draw
+python3 tictactoe/play_cli.py --size 4 --algorithm minimax --depth 3
+
 # CSP solvers (prints a valid assignment to stdout)
-python3 csp/knights_csp.py
+python3 csp/knights_csp.py            # default 5 knights on 5x5
+python3 csp/knights_csp.py -n 8 -k 8  # configurable board size and count
 python3 csp/vehicles_csp.py
+python3 csp/vehicles_csp.py --graph   # emit the constraint graph as Graphviz DOT
 ```
 
 Requires Python 3.x and pygame 2.6.1 (pinned in `requirements.txt`).
@@ -40,7 +47,7 @@ Standard game-tree search to a configurable depth. MAX (human) and MIN (AI) alte
 
 ### Negamax with alpha-beta pruning
 
-Same search, simpler scaffolding. Exploits the zero-sum property so a single recursive function handles both players via a `turn_multiplier`. No duplicated MAX/MIN branches.
+Same search, simpler scaffolding. Exploits the zero-sum property: a single recursive function handles both players by scoring every node from the side-to-move's perspective and negating the recursive result. No duplicated MAX/MIN branches.
 
 ### Evaluation function
 
@@ -77,10 +84,13 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 ├── tictactoe/
 │   ├── game_status.py              # game state and terminal-state evaluation
 │   ├── multiAgents.py              # Minimax + Negamax with alpha-beta pruning
+│   ├── play_cli.py                 # headless terminal driver (no display needed)
 │   └── large_board_tic_tac_toe.py  # pygame GUI
 ├── csp/
 │   ├── knights_csp.py              # knights placement CSP solver
 │   └── vehicles_csp.py             # vehicle scheduling CSP solver
+├── tests/                          # pytest suite
+├── pyproject.toml                  # project metadata and pytest config
 ├── requirements.txt
 └── README.md
 ```
@@ -92,7 +102,7 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-21 tests across the `GameStatus` class, the minimax and negamax algorithms, and both CSP solvers. CI runs the suite on every push and pull request.
+30 tests across the `GameStatus` class, the minimax and negamax algorithms, the headless CLI (including a perfect-self-play-always-draws regression), and both CSP solvers. CI runs the suite on every push and pull request.
 
 ## License
 

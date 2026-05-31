@@ -90,27 +90,18 @@ def minimax(game_state, depth, maximizing_player, alpha=float('-inf'), beta=floa
         return minEval, best_move
 
 def negamax(game_status, depth, alpha=float('-inf'), beta=float('inf')):
-    # Negamax with alpha-beta pruning
+    # Negamax with alpha-beta pruning. All scores are from the perspective of
+    # the side to move; the recursive call is negated to flip perspective.
     terminal = game_status.is_terminal()
     if depth == 0 or terminal:
-        # Use threat-aware, player-relative evaluation
-        scores = game_status.get_negamax_scores(terminal)
-        return scores, None
-    
+        return game_status.get_negamax_scores(terminal), None
+
     maxEval = float('-inf')
     best_moves = []
-    
+
     for move in ordered_moves(game_status):
         new_state = game_status.get_new_state(move)
-        if new_state.is_terminal():
-            evaluation = new_state.get_negamax_scores(True)  # no * turn_multiplier
-            if evaluation > maxEval:
-                maxEval = evaluation
-                best_moves = [move]
-            if evaluation > 0:
-                return maxEval, move
-        else:
-            evaluation = -negamax(new_state, depth - 1, -beta, -alpha)[0]
+        evaluation = -negamax(new_state, depth - 1, -beta, -alpha)[0]
         if evaluation > maxEval:
             maxEval = evaluation
             best_moves = [move]
@@ -119,6 +110,6 @@ def negamax(game_status, depth, alpha=float('-inf'), beta=float('inf')):
         alpha = max(alpha, evaluation)
         if beta <= alpha:
             break
-    
+
     best_move = choose_tiebreak(game_status, best_moves)
     return maxEval, best_move

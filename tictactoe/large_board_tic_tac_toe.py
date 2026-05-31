@@ -245,6 +245,28 @@ class RandomBoardTicTacToe:
     def move(self, move):
         self.game_state = self.game_state.get_new_state(move)
 
+    def finish_if_terminal(self):
+        """If the game is over, record the result and render the winner banner.
+
+        Returns True when the game has ended, so callers can stop driving turns.
+        """
+        if not self.game_state.is_terminal():
+            return False
+
+        self.game_ended = True
+        self.update_persistent_score()
+        winner_text, color = self.get_winner_display()
+        self.draw_scoreboard()
+
+        font = pygame.font.SysFont('Arial', 36, bold=True)
+        text = font.render(winner_text, True, color)
+        # Place winner text near bottom of header to avoid overlapping scoreboard
+        text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE - 30))
+        self.screen.blit(text, text_rect)
+
+        pygame.display.update()
+        return True
+
     def play_ai(self):
         print(f"AI turn: turn_O={self.game_state.turn_O}, player_symbol={self.player_symbol}")
         
@@ -323,47 +345,22 @@ class RandomBoardTicTacToe:
                             pygame.display.update()
 
                             # Check if game is over after player move
-                            terminal = self.game_state.is_terminal()
-                            if terminal:
-                                score = self.game_state.get_scores(terminal)
-                                self.game_ended = True
-                                self.update_persistent_score()
-                                winner_text, color = self.get_winner_display()
-                                self.draw_scoreboard()
-                                
-                                font = pygame.font.SysFont('Arial', 36, bold=True)
-                                text = font.render(winner_text, True, color)
-                                # Place winner text near bottom of header to avoid overlapping scoreboard
-                                text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE - 30))
-                                self.screen.blit(text, text_rect)
-                                
-                                pygame.display.update()
-                            else:
+                            if not self.finish_if_terminal():
                                 if self.mode == "player_vs_ai":
                                     pygame.time.wait(500) # Add a small delay for realism
                                     self.play_ai()
-                                    
                                     # Check if game is over after AI move
-                                    terminal = self.game_state.is_terminal()
-                                    if terminal:
-                                        score = self.game_state.get_scores(terminal)
-                                        self.game_ended = True
-                                        self.update_persistent_score()
-                                        winner_text, color = self.get_winner_display()
-                                        self.draw_scoreboard()
-                                        
-                                        font = pygame.font.SysFont('Arial', 36, bold=True)
-                                        text = font.render(winner_text, True, color)
-                                        # Place winner text near bottom of header to avoid overlapping scoreboard
-                                        text_rect = text.get_rect(center=(self.width // 2, self.HEADER_SIZE - 30))
-                                        self.screen.blit(text, text_rect)
-                                        
-                                        pygame.display.update()
+                                    self.finish_if_terminal()
                         else:
                             print("Cell already occupied. Choose another cell.")
             pygame.display.update()
 
         pygame.quit()
 
-tictactoegame = RandomBoardTicTacToe()
-tictactoegame.play_game()
+def main():
+    game = RandomBoardTicTacToe()
+    game.play_game()
+
+
+if __name__ == "__main__":
+    main()

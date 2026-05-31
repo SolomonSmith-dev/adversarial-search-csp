@@ -1,7 +1,6 @@
-"""Test configuration: expose project modules to the test suite."""
-import pathlib
-import sys
+"""Test configuration.
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "tictactoe"))
-sys.path.insert(0, str(ROOT / "csp"))
+Source directories are exposed to the suite via the ``pythonpath`` option in
+``pyproject.toml`` (``[tool.pytest.ini_options]``), so no sys.path manipulation
+is needed here.
+"""
