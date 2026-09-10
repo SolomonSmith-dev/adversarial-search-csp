@@ -10,7 +10,7 @@ Three deliverables in one repo:
 
 1. **Minimax and Negamax** with alpha-beta pruning, plugged into a Tic-Tac-Toe engine that supports 3x3, 4x4, and 5x5 boards.
 2. **Pygame GUI** for human vs AI or AI vs AI play, with score tracking and variable board size.
-3. **CSP backtracking solvers** for two combinatorial problems: placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
+3. **CSP backtracking solvers**, including a generic framework with MRV ordering and forward checking, applied to three combinatorial problems: N-Queens, placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
 
 Author: Solomon Smith.
 
@@ -35,6 +35,7 @@ python3 csp/knights_csp.py            # default 5 knights on 5x5
 python3 csp/knights_csp.py -n 8 -k 8  # configurable board size and count
 python3 csp/vehicles_csp.py
 python3 csp/vehicles_csp.py --graph   # emit the constraint graph as Graphviz DOT
+python3 csp/nqueens_csp.py -n 8       # N-Queens on the generic CSP framework
 ```
 
 Requires Python 3.x and pygame 2.6.1 (pinned in `requirements.txt`).
@@ -67,7 +68,28 @@ Before search, candidate moves are ordered: winning moves first, then blocking m
 
 ## CSP solvers
 
-Both use plain backtracking with unary-constraint propagation at domain construction time.
+The knights and vehicle solvers use plain backtracking with unary-constraint propagation at domain construction time. The N-Queens solver runs on a small **generic CSP framework** (`csp/backtracking.py`) with two classic optimizations.
+
+### Generic framework (`csp/backtracking.py`)
+
+A reusable `CSP` core: declare variables and domains, attach `Constraint` objects, and call `backtracking_search`. It supports:
+
+- **MRV (minimum-remaining-values)** variable ordering: always branch on the most constrained variable first, so dead ends surface early.
+- **Forward checking**: after each assignment, prune now-impossible values from neighboring domains and abandon the branch the moment any domain empties.
+
+Both are toggleable, and the search returns a `SearchStats` record (nodes explored, backtracks, prunings) so the payoff is measurable. On 8-Queens, the node count drops from **876** (naive backtracking) to **75** (MRV + forward checking):
+
+```
+$ python3 csp/nqueens_csp.py -n 8
+Solution for 8 queens:
+Q . . . . . . .
+...
+[nodes=75 backtracks=67 prunings=291]
+```
+
+### N-Queens (`csp/nqueens_csp.py`)
+
+Place `N` queens on an `N x N` board with no two attacking. One variable per column (value = the queen's row), with a single pairwise no-same-row/diagonal constraint. Solvable for all `n` except 2 and 3. Flags `--no-mrv` and `--no-forward-checking` turn the optimizations off to compare search sizes.
 
 ### Knights placement (`csp/knights_csp.py`)
 
@@ -87,6 +109,8 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 │   ├── play_cli.py                 # headless terminal driver (no display needed)
 │   └── large_board_tic_tac_toe.py  # pygame GUI
 ├── csp/
+│   ├── backtracking.py             # generic CSP core (MRV + forward checking)
+│   ├── nqueens_csp.py              # N-Queens on the generic framework
 │   ├── knights_csp.py              # knights placement CSP solver
 │   └── vehicles_csp.py             # vehicle scheduling CSP solver
 ├── tests/                          # pytest suite
@@ -102,7 +126,7 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-30 tests across the `GameStatus` class, the minimax and negamax algorithms, the headless CLI (including a perfect-self-play-always-draws regression), and both CSP solvers. CI runs the suite on every push and pull request.
+40 tests across the `GameStatus` class, the minimax and negamax algorithms, the headless CLI (including a perfect-self-play-always-draws regression), the generic CSP framework (including a test that forward checking shrinks the search), and all three CSP solvers. CI runs the suite on every push and pull request.
 
 ## License
 
