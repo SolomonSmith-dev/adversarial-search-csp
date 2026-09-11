@@ -15,5 +15,5 @@ dev = ["pytest>=7.0"]
 
 [tool.pytest.ini_options]
 # Expose the source packages to the test suite without sys.path hacks.
-pythonpath = ["tictactoe", "csp"]
+pythonpath = ["tictactoe", "csp", "games"]
 testpaths = ["tests"]

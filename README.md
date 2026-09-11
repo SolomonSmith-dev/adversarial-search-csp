@@ -6,11 +6,12 @@
 
 Adversarial search and constraint satisfaction problem solvers in Python.
 
-Three deliverables in one repo:
+Four deliverables in one repo:
 
 1. **Minimax and Negamax** with alpha-beta pruning, plugged into a Tic-Tac-Toe engine that supports 3x3, 4x4, and 5x5 boards.
 2. **Pygame GUI** for human vs AI or AI vs AI play, with score tracking and variable board size.
-3. **CSP backtracking solvers**, including a generic framework with MRV ordering and forward checking, applied to three combinatorial problems: N-Queens, placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
+3. **A game-agnostic negamax core** (`games/`) that drives both Connect Four and Tic-Tac-Toe from a single search implementation.
+4. **CSP backtracking solvers**, including a generic framework with MRV ordering and forward checking, applied to three combinatorial problems: N-Queens, placing knights on a chessboard with no attacks, and scheduling 5 vehicles across 2 stops and 4 time slots.
 
 Author: Solomon Smith.
 
@@ -29,6 +30,10 @@ python3 tictactoe/large_board_tic_tac_toe.py
 python3 tictactoe/play_cli.py                  # human (X) vs AI on 3x3
 python3 tictactoe/play_cli.py --mode ai_vs_ai  # watch two perfect AIs draw
 python3 tictactoe/play_cli.py --size 4 --algorithm minimax --depth 3
+
+# Connect Four in the terminal (same negamax core as Tic-Tac-Toe)
+python3 games/play_connect_four.py                 # human (X) vs AI
+python3 games/play_connect_four.py --mode ai_vs_ai --depth 5
 
 # CSP solvers (prints a valid assignment to stdout)
 python3 csp/knights_csp.py            # default 5 knights on 5x5
@@ -65,6 +70,21 @@ score = 1000 * triplets_diff + 50 * open_twos_diff + 3 * center_bonus_diff
 ### Move ordering
 
 Before search, candidate moves are ordered: winning moves first, then blocking moves, then everything else. This makes alpha-beta prune harder on average, which matters at depth on 4x4 and 5x5 boards.
+
+### Game-agnostic search core
+
+`games/search.py` holds a negamax + alpha-beta search that knows nothing about any specific game. It operates on any object satisfying a small `GameState` protocol (`is_terminal`, `score`, `legal_moves`, `make_move`, `order_moves`), where `score` is always from the side-to-move's perspective.
+
+The same search drives two unrelated games:
+
+- **Connect Four** (`games/connect_four.py`): a native `GameState` with gravity, four-in-a-row detection (horizontal, vertical, both diagonals), and a window-based heuristic. Center-out column ordering keeps alpha-beta lean (a depth-6 search from the empty 7x6 board explores under 2000 nodes). Board size and the win length are configurable.
+- **Tic-Tac-Toe** (`games/tictactoe_adapter.py`): a thin adapter wrapping the existing `GameStatus` engine, so the identical negamax plays it with no duplicated game logic.
+
+That reuse is asserted directly in the tests: one `negamax` picks correct moves for both games.
+
+```bash
+python3 games/play_connect_four.py --mode ai_vs_ai --depth 5
+```
 
 ## CSP solvers
 
@@ -108,6 +128,11 @@ Schedule 5 vehicles (A through E) across 2 stops (CGI, JB_Hall) and 4 time slots
 │   ├── multiAgents.py              # Minimax + Negamax with alpha-beta pruning
 │   ├── play_cli.py                 # headless terminal driver (no display needed)
 │   └── large_board_tic_tac_toe.py  # pygame GUI
+├── games/
+│   ├── search.py                   # game-agnostic negamax + alpha-beta
+│   ├── connect_four.py             # Connect Four as a GameState
+│   ├── tictactoe_adapter.py        # GameStatus adapted to the same search
+│   └── play_connect_four.py        # headless Connect Four CLI
 ├── csp/
 │   ├── backtracking.py             # generic CSP core (MRV + forward checking)
 │   ├── nqueens_csp.py              # N-Queens on the generic framework
@@ -126,7 +151,7 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-40 tests across the `GameStatus` class, the minimax and negamax algorithms, the headless CLI (including a perfect-self-play-always-draws regression), the generic CSP framework (including a test that forward checking shrinks the search), and all three CSP solvers. CI runs the suite on every push and pull request.
+53 tests across the `GameStatus` class, the minimax and negamax algorithms, the headless CLI (including a perfect-self-play-always-draws regression), Connect Four and the game-agnostic search core (including tests that one search plays both games), the generic CSP framework (including a test that forward checking shrinks the search), and all three CSP solvers. CI runs the suite on every push and pull request.
 
 ## License
 
