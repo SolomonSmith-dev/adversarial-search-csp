@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/SolomonSmith-dev/adversarial-search-csp/actions/workflows/test.yml/badge.svg)](https://github.com/SolomonSmith-dev/adversarial-search-csp/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/downloads/)
 
 Adversarial search and constraint satisfaction problem solvers in Python.
 
