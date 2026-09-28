@@ -3,7 +3,8 @@ Place k knights on an n x n chessboard so none attack each other.
 Uses backtracking to find a solution.
 """
 from __future__ import annotations
-from typing import List, Tuple, Dict, Optional, Set
+import argparse
+from typing import List, Tuple, Optional, Set
 
 Position = Tuple[int, int]
 
@@ -53,12 +54,22 @@ def pretty_board(n: int, placements: List[Position]) -> str:
     return "\n".join(" ".join(row) for row in board)
 
 
-if __name__ == "__main__":
-    # Demo: small instance
-    n, k = 5, 5
-    sol = backtrack_knights(n, k)
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Place k knights on an n x n board with no mutual attacks."
+    )
+    parser.add_argument("-n", type=int, default=5, help="board size (default: 5)")
+    parser.add_argument("-k", type=int, default=5,
+                        help="number of knights to place (default: 5)")
+    args = parser.parse_args(argv)
+
+    sol = backtrack_knights(args.n, args.k)
     if sol:
-        print(f"Found placement for {k} knights on {n}x{n} board:")
-        print(pretty_board(n, sol))
+        print(f"Found placement for {args.k} knights on {args.n}x{args.n} board:")
+        print(pretty_board(args.n, sol))
     else:
-        print("No solution found.")
+        print(f"No solution found for {args.k} knights on {args.n}x{args.n} board.")
+
+
+if __name__ == "__main__":
+    main()

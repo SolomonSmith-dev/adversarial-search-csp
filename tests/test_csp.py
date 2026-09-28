@@ -1,6 +1,6 @@
 """Tests for the CSP solvers."""
 from knights_csp import backtrack_knights, knight_attacks
-from vehicles_csp import REQUIRED_STOPS
+from vehicles_csp import CONSTRAINT_GRAPH_DOT, REQUIRED_STOPS
 from vehicles_csp import solve as vehicles_solve
 
 
@@ -25,6 +25,27 @@ def test_knights_solution_positions_within_board():
     for r, c in sol:
         assert 0 <= r < n
         assert 0 <= c < n
+
+
+def test_knights_custom_instance_smaller_board():
+    # 4 non-attacking knights fit on a 3x3 board (e.g. the four corners).
+    sol = backtrack_knights(n=3, k=4)
+    assert sol is not None
+    assert len(sol) == 4
+    for i, a in enumerate(sol):
+        for b in sol[i + 1:]:
+            assert not knight_attacks(a, b)
+
+
+def test_knights_unsatisfiable_instance_returns_none():
+    # 5 knights cannot be placed on a 2x2 board (only 4 cells exist).
+    assert backtrack_knights(n=2, k=5) is None
+
+
+def test_constraint_graph_dot_is_valid_digraph():
+    dot = CONSTRAINT_GRAPH_DOT.strip()
+    assert dot.startswith("digraph")
+    assert "D.arrive before C.leave" in dot
 
 
 def test_vehicles_solution_exists():

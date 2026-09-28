@@ -3,6 +3,7 @@ Schedule 5 vehicles (A-E) with time slots and stops, following constraints.
 Uses backtracking to find a valid assignment.
 """
 from __future__ import annotations
+import argparse
 from typing import Dict, Tuple, List, Optional, Set
 
 Time = int
@@ -92,10 +93,25 @@ digraph G {
 }
 """
 
-if __name__ == "__main__":
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Schedule 5 vehicles across stops and time slots via backtracking."
+    )
+    parser.add_argument("--graph", action="store_true",
+                        help="print the constraint graph in Graphviz DOT format and exit")
+    args = parser.parse_args(argv)
+
+    if args.graph:
+        print(CONSTRAINT_GRAPH_DOT.strip())
+        return
+
     solution = solve()
     if solution:
         for v in VEHICLES:
             print(f"{v}: time={solution[v][0]}, stop={solution[v][1]}, action={solution[v][2]}")
     else:
         print("No solution found.")
+
+
+if __name__ == "__main__":
+    main()

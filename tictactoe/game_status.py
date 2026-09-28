@@ -128,11 +128,16 @@ class GameStatus:
 
     def get_negamax_scores(self, terminal):
         """
-        Return a value from the mover's perspective for negamax.
-        For terminal (full board) reuse the final ±1000/0 outcome.
+        Return a value from the perspective of the side to move, as negamax
+        requires.
+
+        At a terminal node the side to move never wins: the opponent must have
+        completed the line on the previous ply. So a decided game is a loss for
+        the mover (-1000); a full board with no line is a draw (0). Non-terminal
+        leaves fall back to the mover-relative heuristic.
         """
         if terminal:
-            return self.get_scores(terminal=True)
+            return -1000 if self.get_scores(terminal=True) != 0 else 0
         return self.evaluate_relative()
 
     def get_moves(self):
@@ -146,24 +151,28 @@ class GameStatus:
 
     def opponent_winning_moves_next(self):
         """
-        Identify blocking moves: positions where if we DON'T play,
-        the opponent can win on their next turn.
-        
+        Identify blocking moves: cells where the opponent would immediately
+        complete a line if they played there. Occupying one of these cells
+        blocks that win, so they are prioritized during search.
+
         Returns:
-            set: Moves we should prioritize to prevent opponent wins
+            set: Cells we should prioritize to prevent an opponent win
         """
         opponent = -1 if self.turn_O else 1
-        winning = set()
+        before = self._count_triplets_for(opponent)
+        blocks = set()
         for move in self.get_moves():
-            test_state = self.get_new_state(move)
-            # After our move, it's opponent's turn
-            # Check if opponent can win on their next move
-            for opp_move in test_state.get_moves():
-                final_state = test_state.get_new_state(opp_move)
-                if final_state._count_triplets_for(opponent) > test_state._count_triplets_for(opponent):
-                    winning.add(move)
-                    break
-        return winning
+            r, c = move
+            # Simulate the OPPONENT taking this cell.
+            if hasattr(self.board_state[0], 'copy'):
+                test_board = [row.copy() for row in self.board_state]
+            else:
+                test_board = [list(row) for row in self.board_state]
+            test_board[r][c] = opponent
+            test_state = GameStatus(test_board, not self.turn_O, self.human_symbol)
+            if test_state._count_triplets_for(opponent) > before:
+                blocks.add(move)
+        return blocks
 
     def winning_moves_for_current_player(self):
         """
